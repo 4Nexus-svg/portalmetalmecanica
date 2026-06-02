@@ -26,15 +26,15 @@ export default async function BuscaPage({ searchParams }: Props) {
   const posts: Post[] = [];
 
   if (q && q.trim().length > 1) {
-    const { data } = await supabase
-      .from("posts")
-      .select("id, slug, title, excerpt, featured_image, category, region, published_at")
-      .not("published_at", "is", null)
-      .textSearch("search_vector", q.trim(), { type: "websearch", config: "portuguese" })
-      .order("published_at", { ascending: false })
-      .limit(20);
+   const { data } = await supabase
+  .from("posts")
+  .select("id, slug, title, excerpt, featured_image, category, region, published_at")
+  .not("published_at", "is", null)
+  .textSearch("search_vector", q.trim(), { type: "websearch", config: "portuguese" })
+  .order("published_at", { ascending: false })
+  .limit(20) as { data: Post[] | null };
 
-    if (data) posts.push(...data);
+if (data) posts.push(...data);
   }
 
   return (
