@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent text-white px-4 py-2 rounded-lg font-medium hover:bg-accent-light transition-colors;
+  }
+  .btn-outline {
+    @apply border border-brand text-brand px-4 py-2 rounded-lg font-medium hover:bg-brand hover:text-white transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden;
+  }
+}
