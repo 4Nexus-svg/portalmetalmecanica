@@ -4,6 +4,17 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Search } from "lucide-react";
 
+interface Post {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  category: string | null;
+  region: string | null;
+  published_at: string | null;
+}
+
 interface Props {
   searchParams: Promise<{ q?: string }>;
 }
@@ -12,7 +23,7 @@ export default async function BuscaPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const supabase = await createClient();
 
-  let posts = null;
+  const posts: Post[] = [];
 
   if (q && q.trim().length > 1) {
     const { data } = await supabase
@@ -23,7 +34,7 @@ export default async function BuscaPage({ searchParams }: Props) {
       .order("published_at", { ascending: false })
       .limit(20);
 
-    posts = data;
+    if (data) posts.push(...data);
   }
 
   return (
@@ -33,16 +44,16 @@ export default async function BuscaPage({ searchParams }: Props) {
         <h1 className="text-xl font-bold text-[#1A2B4A]">
           {q ? `Resultados para "${q}"` : "Busca"}
         </h1>
-        {posts && Array.isArray(posts) && (
-  <span className="text-sm text-gray-400">— {posts.length} resultado{posts.length !== 1 ? "s" : ""}</span>
-)}
+        {q && (
+          <span className="text-sm text-gray-400">— {posts.length} resultado{posts.length !== 1 ? "s" : ""}</span>
+        )}
       </div>
 
       {!q && (
         <p className="text-gray-500">Digite um termo para buscar notícias no portal.</p>
       )}
 
-      {q && posts?.length === 0 && (
+      {q && posts.length === 0 && (
         <div className="text-center py-16 text-gray-400">
           <Search size={40} className="mx-auto mb-4 opacity-30" />
           <p className="text-lg font-medium">Nenhum resultado encontrado</p>
@@ -51,7 +62,7 @@ export default async function BuscaPage({ searchParams }: Props) {
       )}
 
       <div className="space-y-4">
-        {(posts ?? []).map((post) => (
+        {posts.map((post) => (
           <Link
             key={post.id}
             href={"/noticias/" + post.slug}
