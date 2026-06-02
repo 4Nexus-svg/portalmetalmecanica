@@ -80,7 +80,7 @@ export default function NovoClassificadoPage() {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (destaque ? 30 : 15));
 
-    const { data, error } = await supabase.from("classifieds").insert({
+    const { data, error } = await (supabase.from("classifieds") as any).insert({
       user_id: user.id,
       title: form.title,
       description: form.description || null,
