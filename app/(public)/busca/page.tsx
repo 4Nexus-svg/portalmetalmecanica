@@ -33,9 +33,9 @@ export default async function BuscaPage({ searchParams }: Props) {
         <h1 className="text-xl font-bold text-[#1A2B4A]">
           {q ? `Resultados para "${q}"` : "Busca"}
         </h1>
-        {posts && (
-          <span className="text-sm text-gray-400">— {posts.length} resultado{posts.length !== 1 ? "s" : ""}</span>
-        )}
+        {posts && Array.isArray(posts) && (
+  <span className="text-sm text-gray-400">— {posts.length} resultado{posts.length !== 1 ? "s" : ""}</span>
+)}
       </div>
 
       {!q && (
