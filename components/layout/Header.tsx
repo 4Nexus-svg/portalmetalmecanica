@@ -155,7 +155,10 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 80);
+    const handler = () => {
+      if (window.scrollY > 80) setScrolled(true);
+      else if (window.scrollY < 40) setScrolled(false);
+    };
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
