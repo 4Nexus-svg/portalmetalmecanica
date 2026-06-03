@@ -1,13 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from './ai-provider';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
-
-let genAI: GoogleGenerativeAI | null = null;
-
-function getGemini() {
-  if (!genAI) genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  return genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
-}
 
 const CATEGORIAS_VALIDAS = ['Mercado', 'Tecnologia', 'Industria', 'Emprego', 'Legislacao', 'Eventos', 'Siderurgia', 'Energia'];
 const REGIOES_VALIDAS = ['ES', 'MG', 'Brasil', 'Internacional'];
@@ -21,10 +14,9 @@ type RewriteResult = {
 };
 
 export async function reescreverComIA(item: FeedItem): Promise<RewriteResult> {
-  const model = getGemini();
   const contexto = `Título: ${item.titulo}\nFonte: ${item.fonteNome}\nConteúdo: ${item.conteudo.slice(0, 800)}`;
 
-  // ── Chamada 1: metadados (JSON pequeno, sem HTML) ─────────────────────────
+  // ── Chamada 1: metadados (JSON) ───────────────────────────────────────────
   const metadados = await safeRun(
     async () => {
       const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
@@ -34,10 +26,9 @@ Analise a notícia abaixo e responda APENAS com JSON válido (sem markdown, sem 
 NOTÍCIA:
 ${contexto}`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text().trim()
-        .replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
-      return JSON.parse(text) as { titulo: string; resumo: string; categoria: string; regiao: string };
+      const text = await generateText(prompt);
+      const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+      return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
     },
     {
       fallback: {
@@ -49,9 +40,9 @@ ${contexto}`;
     }
   );
 
-  // ── Chamada 2: artigo completo (HTML direto, sem JSON) ────────────────────
+  // ── Chamada 2: artigo completo (HTML direto) ──────────────────────────────
   const conteudo = await safeRun(
-    async () => { /* timeout: 60s, 1 tentativa */
+    async () => {
       const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
 
 Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguagem profissional e objetiva.
@@ -59,7 +50,7 @@ Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguag
 INSTRUÇÕES:
 - Escreva entre 5 e 7 parágrafos usando APENAS tags <p>
 - Contextualize o fato para profissionais do setor
-- Mencione impactos econômicos, dados relevantes e perspectivas
+- Mencione impactos econômicos, dados relevantes e perspectivas do mercado
 - Mínimo absoluto: 350 palavras
 - NÃO use outros elementos HTML além de <p>
 - Responda APENAS com o HTML dos parágrafos, sem explicações, sem título
@@ -67,13 +58,9 @@ INSTRUÇÕES:
 NOTÍCIA:
 ${contexto}`;
 
-      const result = await model.generateContent(prompt);
-      const html = result.response.text().trim()
-        .replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
-
-      // Garante que começa com <p>
-      if (!html.startsWith('<p>')) return `<p>${html}</p>`;
-      return html;
+      const html = await generateText(prompt);
+      const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+      return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
     },
     {
       timeout: 60000,

@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
+import { generateText } from './ai-provider';
 
 // ─── Camada 1: Score rápido por keywords ─────────────────────────────────────
 const PESOS: [string, number][] = [
@@ -89,13 +89,7 @@ export function scoreRapido(titulo: string, conteudo = ''): number {
   return score;
 }
 
-// ─── Camada 2: Filtro IA via Gemini ──────────────────────────────────────────
-let genAI: GoogleGenerativeAI | null = null;
-
-function getGemini() {
-  if (!genAI) genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  return genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
-}
+// ─── Camada 2: Filtro IA (Gemini → Groq fallback) ────────────────────────────
 
 type FiltroIAResult = {
   relevante: boolean;
@@ -106,7 +100,6 @@ type FiltroIAResult = {
 export async function filtrarRelevanciaIA(item: FeedItem): Promise<FiltroIAResult> {
   return safeRun(
     async () => {
-      const model = getGemini();
       const prompt = `Você é um filtro de notícias do Portal Metalmecânica — portal industrial do ES e MG.
 Avalie se a notícia é relevante para qualquer um destes temas:
 1. Metalmecânica, siderurgia, metalurgia, aço, fundição, usinagem
@@ -123,8 +116,7 @@ NOTÍCIA:
 Título: ${item.titulo}
 Conteúdo: ${item.conteudo.slice(0, 400)}`;
 
-      const result = await model.generateContent(prompt);
-      const text = result.response.text().trim();
+      const text = await generateText(prompt);
       const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
       return JSON.parse(json) as FiltroIAResult;
     },
