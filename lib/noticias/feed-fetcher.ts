@@ -115,6 +115,16 @@ async function fetchRSSFeed(feed: { url: string; nome: string }, tipoFonte: Tipo
   );
 }
 
+// ─── Utilitário: extrai nome legível do domínio como fallback ────────────────
+function nomeDoSite(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    return host.split('.')[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  } catch {
+    return 'Portal';
+  }
+}
+
 // ─── Scrapers HTML (sites sem RSS) ───────────────────────────────────────────
 
 async function fetchSindiferes(): Promise<FeedItem[]> {
@@ -176,7 +186,7 @@ async function fetchGNews(): Promise<FeedItem[]> {
     const data = await safeRun(
       async () => {
         const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-        return res.json() as Promise<{ articles?: { title: string; url: string; description: string; publishedAt: string; image?: string }[] }>;
+        return res.json() as Promise<{ articles?: { title: string; url: string; description: string; publishedAt: string; image?: string; source?: { name?: string; url?: string } }[] }>;
       },
       { fallback: { articles: [] } }
     );
@@ -188,7 +198,7 @@ async function fetchGNews(): Promise<FeedItem[]> {
         conteudo: a.description ?? '',
         publicadoEm: new Date(a.publishedAt),
         imagemUrl: a.image,
-        fonteNome: 'GNews',
+        fonteNome: a.source?.name || nomeDoSite(a.url),
         tipoFonte: 'api',
       });
     }
@@ -205,7 +215,7 @@ async function fetchNewsData(): Promise<FeedItem[]> {
     const data = await safeRun(
       async () => {
         const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-        return res.json() as Promise<{ results?: { title: string; link: string; description: string | null; pubDate: string; image_url?: string }[] }>;
+        return res.json() as Promise<{ results?: { title: string; link: string; description: string | null; pubDate: string; image_url?: string; source_id?: string; source_name?: string }[] }>;
       },
       { fallback: { results: [] } }
     );
@@ -217,7 +227,7 @@ async function fetchNewsData(): Promise<FeedItem[]> {
         conteudo: a.description ?? '',
         publicadoEm: new Date(a.pubDate),
         imagemUrl: a.image_url,
-        fonteNome: 'NewsData',
+        fonteNome: a.source_name || a.source_id || nomeDoSite(a.link),
         tipoFonte: 'api',
       });
     }
@@ -245,7 +255,7 @@ async function fetchCurrents(): Promise<FeedItem[]> {
       conteudo: a.description ?? '',
       publicadoEm: new Date(a.published),
       imagemUrl: a.image && a.image !== 'None' ? a.image : undefined,
-      fonteNome: 'Currents',
+      fonteNome: nomeDoSite(a.url),
       tipoFonte: 'api' as TipoFonte,
     }));
 }
@@ -259,7 +269,7 @@ async function fetchNewsAPI(): Promise<FeedItem[]> {
   const data = await safeRun(
     async () => {
       const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-      return res.json() as Promise<{ articles?: { title: string; url: string; description: string | null; publishedAt: string; urlToImage?: string }[] }>;
+      return res.json() as Promise<{ articles?: { title: string; url: string; description: string | null; publishedAt: string; urlToImage?: string; source?: { id?: string; name?: string } }[] }>;
     },
     { fallback: { articles: [] } }
   );
@@ -271,7 +281,7 @@ async function fetchNewsAPI(): Promise<FeedItem[]> {
       conteudo: a.description ?? '',
       publicadoEm: new Date(a.publishedAt),
       imagemUrl: a.urlToImage,
-      fonteNome: 'NewsAPI',
+      fonteNome: a.source?.name || nomeDoSite(a.url),
       tipoFonte: 'api' as TipoFonte,
     }));
 }
