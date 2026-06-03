@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft, Calendar, MapPin, Building2 } from "lucide-react";
 import { EVENTOS_FILTROS, CHIPS_FILTRO, TIPO_LABELS, TIPO_CORES, type TipoEvento } from "@/lib/eventos-filtros";
-import { EventCard } from "../page";
+import { EventCard } from "@/components/eventos/EventCard";
 import type { Database } from "@/types/database";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
