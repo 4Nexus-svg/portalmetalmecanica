@@ -11,6 +11,7 @@ import {
 } from '@/lib/noticias/publisher';
 import { processarComConcorrencia } from '@/lib/noticias/utils';
 import type { ResultadoPipeline } from '@/lib/noticias/types';
+import { extrairEPublicarEventos } from '@/lib/noticias/event-extractor';
 
 const MAX_INSERCOES = 30;
 const MAX_ERROS_CONSECUTIVOS = 10;
@@ -110,6 +111,13 @@ export async function GET(req: NextRequest) {
       },
       3
     );
+    // Extração de eventos das notícias coletadas
+    if (!dry) {
+      const eventosInseridos = await extrairEPublicarEventos(comScore);
+      if (eventosInseridos > 0) {
+        (resultado as typeof resultado & { eventos?: number }).eventos = eventosInseridos;
+      }
+    }
   } catch (err) {
     return NextResponse.json(
       { ...resultado, error: err instanceof Error ? err.message : 'Erro desconhecido' },

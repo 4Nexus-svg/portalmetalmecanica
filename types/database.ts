@@ -31,6 +31,11 @@ export type Database = {
         Insert: { email: string };
         Update: never;
       };
+      events: {
+        Row: { id: number; slug: string; title: string; description: string | null; type: 'feira' | 'congresso' | 'seminario' | 'workshop' | 'treinamento'; date_start: string; date_end: string | null; city: string | null; state: string | null; organizer: string | null; image_url: string | null; is_auto: boolean; created_at: string };
+        Insert: { slug: string; title: string; description?: string | null; type: 'feira' | 'congresso' | 'seminario' | 'workshop' | 'treinamento'; date_start: string; date_end?: string | null; city?: string | null; state?: string | null; organizer?: string | null; image_url?: string | null; is_auto?: boolean };
+        Update: { title?: string; description?: string | null; type?: 'feira' | 'congresso' | 'seminario' | 'workshop' | 'treinamento'; date_start?: string; date_end?: string | null; city?: string | null; state?: string | null; organizer?: string | null; image_url?: string | null };
+      };
       columnists: {
         Row: { id: number; nome: string; slug: string; cargo: string | null; especialidade: string | null; bio: string | null; iniciais: string | null; cor: string | null; foto_url: string | null; ativo: boolean; created_at: string };
         Insert: { nome: string; slug: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean };
