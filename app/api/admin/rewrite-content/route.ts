@@ -67,6 +67,10 @@ export async function GET(req: NextRequest) {
   const erros: string[] = [];
 
   for (const post of curtos) {
+    // Delay entre chamadas para respeitar rate limit
+    if (atualizados > 0 || erros.length > 0) {
+      await new Promise(r => setTimeout(r, 5000));
+    }
     try {
       const novoConteudo = await gerarArtigo(
         post.title,
