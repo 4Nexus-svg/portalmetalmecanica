@@ -22,9 +22,13 @@ const PESOS: [string, number][] = [
   ['mineração', 1],
   ['exportação aço', 1],
   ['fornos industriais', 1],
+  // Feiras e eventos do setor
+  ['mecshow', 4], ['mec show', 4],
+  ['fenaf', 4], ['feira fundição', 3],
+  ['fesqua', 3], ['feira metalurgia', 3],
+  ['feimec', 3], ['mercopar', 3],
   // Espírito Santo — canal ES
-  ['mecshow', 4],
-  ['mec show', 4],
+  ['sindiferes', 4],
   ['sindiferes', 4],
   ['sindicato ferro aço es', 3],
   ['espírito santo', 3],

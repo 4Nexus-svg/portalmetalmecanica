@@ -127,46 +127,39 @@ function nomeDoSite(url: string): string {
 
 // ─── Scrapers HTML (sites sem RSS) ───────────────────────────────────────────
 
-async function fetchMecShow(): Promise<FeedItem[]> {
+async function fetchSiteGenerico(url: string, nome: string, dominioBase: string): Promise<FeedItem[]> {
   return safeRun(
     async () => {
-      const res = await fetch('https://www.mecshow.com.br', {
+      const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)' },
         signal: AbortSignal.timeout(15000),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
-
       const items: FeedItem[] = [];
       const vistos = new Set<string>();
-      const base = 'https://www.mecshow.com.br';
-
-      const linkRe = /<a\s[^>]*href="(https?:\/\/www\.mecshow\.com\.br\/[^"#?]+)"[^>]*>\s*([\s\S]{10,200}?)\s*<\/a>/gi;
+      const linkRe = new RegExp(`<a\\s[^>]*href="(https?:\\/\\/[^"]*${dominioBase}[^"#?]+)"[^>]*>\\s*([\\s\\S]{15,200}?)\\s*<\\/a>`, 'gi');
       let m: RegExpExecArray | null;
-
       while ((m = linkRe.exec(html)) !== null) {
-        const url = m[1].trim();
+        const itemUrl = m[1].trim();
         const titulo = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
         if (titulo.length < 15 || titulo.length > 200) continue;
-        if (/\/(category|tag|author|page|wp-|politica|cookie)\b/i.test(url)) continue;
-        if (vistos.has(url)) continue;
-        vistos.add(url);
-        items.push({
-          titulo,
-          url,
-          conteudo: titulo,
-          publicadoEm: new Date(),
-          fonteNome: 'MecShow',
-          tipoFonte: 'rss-dedicado',
-        });
-        if (items.length >= 10) break;
+        if (/\/(category|tag|author|page|wp-|politica|cookie|contato|sobre)\b/i.test(itemUrl)) continue;
+        if (vistos.has(itemUrl)) continue;
+        vistos.add(itemUrl);
+        items.push({ titulo, url: itemUrl, conteudo: titulo, publicadoEm: new Date(), fonteNome: nome, tipoFonte: 'rss-dedicado' });
+        if (items.length >= 8) break;
       }
-
       return items;
     },
     { fallback: [] as FeedItem[] }
   );
 }
+
+const fetchMecShow    = () => fetchSiteGenerico('https://www.mecshow.com.br', 'MecShow', 'mecshow.com.br');
+const fetchFenaf      = () => fetchSiteGenerico('https://abifa.org.br/site/fenaf/', 'FENAF', 'abifa.org.br');
+const fetchFesqua     = () => fetchSiteGenerico('https://fesqua.com.br', 'FESQUA', 'fesqua.com.br');
+const fetchMetalurgia = () => fetchSiteGenerico('https://metalurgia.com.br', 'Feira Metalurgia', 'metalurgia.com.br');
 
 async function fetchSindiferes(): Promise<FeedItem[]> {
   return safeRun(
@@ -365,19 +358,25 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const [dedicados, sindiferes, mecshow] = await Promise.all([
+    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia] = await Promise.all([
       Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
       fetchSindiferes(),
       fetchMecShow(),
+      fetchFenaf(),
+      fetchFesqua(),
+      fetchMetalurgia(),
     ]);
     for (let i = 0; i < FEEDS_DEDICADO.length; i++) {
       feedStats[FEEDS_DEDICADO[i].nome] = dedicados[i].length;
       all.push(...dedicados[i]);
     }
-    feedStats['SINDIFER-ES'] = sindiferes.length;
-    all.push(...sindiferes);
-    feedStats['MecShow'] = mecshow.length;
-    all.push(...mecshow);
+    for (const [nome, lote] of [
+      ['SINDIFER-ES', sindiferes], ['MecShow', mecshow],
+      ['FENAF', fenaf], ['FESQUA', fesqua], ['Feira Metalurgia', metalurgia],
+    ] as [string, FeedItem[]][]) {
+      feedStats[nome] = lote.length;
+      all.push(...lote);
+    }
   }
 
   const validos = all.filter(i => i.titulo && i.url && dentroDoLimite(i));
