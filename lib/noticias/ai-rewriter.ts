@@ -51,7 +51,7 @@ ${contexto}`;
 
   // ── Chamada 2: artigo completo (HTML direto, sem JSON) ────────────────────
   const conteudo = await safeRun(
-    async () => {
+    async () => { /* timeout: 60s, 1 tentativa */
       const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
 
 Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguagem profissional e objetiva.
@@ -76,6 +76,8 @@ ${contexto}`;
       return html;
     },
     {
+      timeout: 60000,
+      tentativas: 1,
       fallback: `<p>${metadados.resumo}</p>`,
     }
   );
