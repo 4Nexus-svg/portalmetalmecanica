@@ -76,6 +76,7 @@ async function gerarSlugUnico(
 export type DadosPublicacao = FeedItem & {
   tituloFinal: string;
   resumoFinal: string;
+  conteudoFinal: string;
   categoria: string;
   regiao: string;
   imagemFinal: string | null;
@@ -90,7 +91,7 @@ export async function publicarNoticia(dados: DadosPublicacao): Promise<void> {
     slug,
     title: dados.tituloFinal,
     excerpt: dados.resumoFinal,
-    content: `<p>${dados.resumoFinal}</p>`,
+    content: dados.conteudoFinal,
     featured_image: dados.imagemFinal,
     category: dados.categoria,
     region: dados.regiao,

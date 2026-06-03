@@ -90,6 +90,7 @@ export async function GET(req: NextRequest) {
               ...item,
               tituloFinal: rewrite.titulo,
               resumoFinal: rewrite.resumo,
+              conteudoFinal: rewrite.conteudo,
               categoria: rewrite.categoria,
               regiao: rewrite.regiao,
               imagemFinal,
