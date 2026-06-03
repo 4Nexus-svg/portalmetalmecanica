@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/buscar-noticias",
+      "schedule": "0 */3 * * *"
+    }
+  ]
+}
