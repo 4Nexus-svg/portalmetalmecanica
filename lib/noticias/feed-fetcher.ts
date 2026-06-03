@@ -2,17 +2,27 @@ import type { FeedItem, TipoFonte } from './types';
 import { safeRun } from './utils';
 
 // ─── Termos de busca para APIs ────────────────────────────────────────────────
+// Organizados por categoria para cobrir todos os filtros do portal
 const TERMOS = [
-  'metalmecânica Brasil',
-  'siderurgia Brasil',
-  'metalurgia mercado',
-  'aço Brasil',
-  'automação industrial Brasil',
-  'ABIMAQ',
-  'Usiminas',
-  'Vallourec',
-  'CSN siderurgia',
-  'indústria metal mecânica',
+  // Geral — metalmecânica/siderurgia
+  'metalmecânica siderurgia Brasil',
+  'metalurgia aço indústria',
+  'Usiminas Vallourec CSN siderurgia',
+  // ES — Espírito Santo
+  'indústria Espírito Santo',
+  'Vale Portos Espírito Santo industrial',
+  // MG — Minas Gerais
+  'siderurgia Minas Gerais',
+  'Usiminas Ipatinga Vallourec MG',
+  // Tecnologia / Automação
+  'automação industrial robótica manufatura Brasil',
+  'indústria 4.0 inteligência artificial fabricação',
+  // Sustentabilidade
+  'energia renovável eficiência energética indústria',
+  'sustentabilidade industrial descarbonização',
+  // Segurança do Trabalho
+  'segurança trabalho indústria NR metalurgia',
+  'acidente trabalho metalurgia EPI',
 ];
 
 // ─── Feeds RSS ────────────────────────────────────────────────────────────────
@@ -20,17 +30,25 @@ const FEEDS_GERAL: { url: string; nome: string }[] = [
   { url: 'https://agenciabrasil.ebc.com.br/rss/economia/feed.xml', nome: 'Agência Brasil' },
   { url: 'https://exame.com/feed/', nome: 'Exame' },
   { url: 'https://www.infomoney.com.br/feed/', nome: 'InfoMoney' },
-  { url: 'https://valor.globo.com/rss/industria', nome: 'Valor Econômico' },
-  { url: 'https://www.em.com.br/rss/economia/rss.xml', nome: 'Estado de Minas' },
-  { url: 'https://www.agazeta.com.br/rss/economia', nome: 'A Gazeta' },
-  { url: 'https://www.folhavitoria.com.br/rss.xml', nome: 'Folha Vitória' },
+  // ES — Espírito Santo
+  { url: 'https://www.agazeta.com.br/rss/todos-conteudos', nome: 'A Gazeta ES' },
+  { url: 'https://www.folhavitoria.com.br/economia/rss.xml', nome: 'Folha Vitória' },
+  { url: 'https://www.gazetaonline.com.br/feed/', nome: 'Gazeta Online ES' },
+  // MG — Minas Gerais
+  { url: 'https://www.em.com.br/rss/economia.xml', nome: 'Estado de Minas' },
+  { url: 'https://www.otempo.com.br/rss/economia', nome: 'O Tempo MG' },
 ];
 
 const FEEDS_DEDICADO: { url: string; nome: string }[] = [
-  { url: 'https://www.aneel.gov.br/rss', nome: 'ANEEL' },
-  { url: 'https://www.gov.br/anp/pt-br/rss.xml', nome: 'ANP' },
+  // Setor industrial
+  { url: 'https://www.abimaq.org.br/feed/', nome: 'ABIMAQ' },
+  { url: 'https://www.cni.com.br/feed/', nome: 'CNI' },
+  // Energia e sustentabilidade
+  { url: 'https://www.aneel.gov.br/rss.xml', nome: 'ANEEL' },
   { url: 'https://www.ibram.org.br/rss', nome: 'IBRAM' },
   { url: 'https://www.iba.org.br/feed/', nome: 'IBÁ' },
+  // Segurança do trabalho
+  { url: 'https://www.gov.br/trabalho-e-emprego/pt-br/rss.xml', nome: 'MTE' },
 ];
 
 // ─── Parsing RSS ──────────────────────────────────────────────────────────────
@@ -113,7 +131,7 @@ async function fetchGNews(): Promise<FeedItem[]> {
   const key = process.env.GNEWS_API_KEY;
   if (!key) return [];
   const items: FeedItem[] = [];
-  for (const termo of TERMOS.slice(0, 3)) {
+  for (const termo of TERMOS.slice(0, 5)) {
     const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(termo)}&lang=pt&country=br&max=10&apikey=${key}`;
     const data = await safeRun(
       async () => {
@@ -142,7 +160,7 @@ async function fetchNewsData(): Promise<FeedItem[]> {
   const key = process.env.NEWSDATA_API_KEY;
   if (!key) return [];
   const items: FeedItem[] = [];
-  for (const termo of TERMOS.slice(0, 3)) {
+  for (const termo of TERMOS.slice(3, 8)) {
     const url = `https://newsdata.io/api/1/news?apikey=${key}&q=${encodeURIComponent(termo)}&language=pt&country=br`;
     const data = await safeRun(
       async () => {
@@ -170,7 +188,7 @@ async function fetchNewsData(): Promise<FeedItem[]> {
 async function fetchCurrents(): Promise<FeedItem[]> {
   const key = process.env.CURRENTS_API_KEY;
   if (!key) return [];
-  const termo = TERMOS[0];
+  const termo = TERMOS[8]; // sustentabilidade
   const url = `https://api.currentsapi.services/v1/search?keywords=${encodeURIComponent(termo)}&language=pt&apiKey=${key}`;
   const data = await safeRun(
     async () => {
@@ -195,7 +213,7 @@ async function fetchCurrents(): Promise<FeedItem[]> {
 async function fetchNewsAPI(): Promise<FeedItem[]> {
   const key = process.env.NEWSAPI_KEY;
   if (!key) return [];
-  const termo = TERMOS[1];
+  const termo = TERMOS[10]; // segurança do trabalho
   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(termo)}&language=pt&pageSize=20&apiKey=${key}`;
   const data = await safeRun(
     async () => {
