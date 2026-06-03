@@ -83,10 +83,31 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
       )}
 
       {post.hasAccess ? (
-        <div
-          className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-700"
-          dangerouslySetInnerHTML={{ __html: sanitizeContent(post.content ?? "<p>Conteúdo em breve.</p>") }}
-        />
+        <>
+          <div
+            className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-700"
+            dangerouslySetInnerHTML={{ __html: sanitizeContent(post.content ?? "<p>Conteúdo em breve.</p>") }}
+          />
+
+          {/* Fonte da notícia */}
+          {post.fonte_url && (
+            <div className="mt-10 pt-6 border-t border-gray-100">
+              <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-2">Fonte original</p>
+              <a
+                href={post.fonte_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-[#1A2B4A] hover:text-[#C9A84C] transition-colors"
+              >
+                <span className="w-6 h-6 rounded-full bg-[#1A2B4A]/10 flex items-center justify-center text-xs font-bold text-[#1A2B4A]">
+                  {(post.fonte_nome ?? 'F')[0].toUpperCase()}
+                </span>
+                {post.fonte_nome ?? post.fonte_url}
+                <svg className="w-3.5 h-3.5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            </div>
+          )}
+        </>
       ) : (
         <div>
           <div className="prose prose-lg max-w-none text-gray-500 line-clamp-3">

@@ -90,7 +90,7 @@ export async function publicarNoticia(dados: DadosPublicacao): Promise<void> {
     slug,
     title: dados.tituloFinal,
     excerpt: dados.resumoFinal,
-    content: dados.conteudo || dados.resumoFinal,
+    content: `<p>${dados.resumoFinal}</p>`,
     featured_image: dados.imagemFinal,
     category: dados.categoria,
     region: dados.regiao,
