@@ -5,6 +5,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft } from "lucide-react";
+import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -15,17 +16,202 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from("posts").select("title, excerpt, featured_image").eq("slug", slug).single();
-  if (!data) return {};
-  return {
-    title: data.title,
-    description: data.excerpt,
-    openGraph: { images: data.featured_image ? [data.featured_image] : [] },
-  };
+
+  const { data: post } = await supabase
+    .from("posts")
+    .select("title, excerpt, featured_image")
+    .eq("slug", slug)
+    .single();
+
+  if (post) {
+    return {
+      title: post.title,
+      description: post.excerpt,
+      openGraph: { images: post.featured_image ? [post.featured_image] : [] },
+    };
+  }
+
+  const filtro = NOTICIAS_FILTROS[slug];
+  if (filtro) {
+    return {
+      title: `${filtro.label} | Portal Metalmecânica`,
+      description: filtro.descricao,
+    };
+  }
+
+  return {};
 }
 
-export default async function PostPage({ params }: Props) {
-  const { slug } = await params;
+// ─── Página de post individual ────────────────────────────────────────────────
+
+async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>> }) {
+  if (!post) return null;
+  return (
+    <article className="max-w-3xl mx-auto px-4 py-10">
+      <Link href="/noticias" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-900 transition-colors mb-8">
+        <ArrowLeft size={16} /> Voltar às notícias
+      </Link>
+
+      <div className="flex items-center gap-3 mb-4">
+        {post.category && (
+          <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">{post.category}</span>
+        )}
+        {post.region && (
+          <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">{post.region}</span>
+        )}
+        {post.is_exclusive && (
+          <span className="bg-blue-900 text-white text-xs font-semibold px-3 py-1 rounded-full">EXCLUSIVO</span>
+        )}
+      </div>
+
+      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">{post.title}</h1>
+
+      {post.published_at && (
+        <time className="text-sm text-gray-500 block mb-8">
+          {format(new Date(post.published_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+        </time>
+      )}
+
+      {post.featured_image && (
+        <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
+          <Image src={post.featured_image} alt={post.title} fill className="object-cover" priority />
+        </div>
+      )}
+
+      {post.hasAccess ? (
+        <div
+          className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-700"
+          dangerouslySetInnerHTML={{ __html: post.content ?? "<p>Conteúdo em breve.</p>" }}
+        />
+      ) : (
+        <div>
+          <div className="prose prose-lg max-w-none text-gray-500 line-clamp-3">
+            <p>{post.excerpt}</p>
+          </div>
+          <div className="relative mt-4">
+            <div className="prose prose-lg max-w-none blur-sm select-none pointer-events-none text-gray-400">
+              <p>Lorem ipsum dolor sit amet consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+              <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
+          </div>
+          <div className="mt-8 rounded-2xl border-2 border-blue-900/20 bg-blue-50 p-8 text-center">
+            <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-white text-xl">🔒</span>
+            </div>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">Conteúdo exclusivo para assinantes</h3>
+            <p className="text-gray-600 mb-6">Acesse este e todos os conteúdos exclusivos por apenas <strong>R$ 290/mês</strong>.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/assinatura" className="bg-orange-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors">Ver planos</Link>
+              <Link href="/login" className="border-2 border-blue-900 text-blue-900 font-semibold px-6 py-3 rounded-lg hover:bg-blue-900 hover:text-white transition-colors">Já sou assinante</Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </article>
+  );
+}
+
+// ─── Página de categoria filtrada ─────────────────────────────────────────────
+
+async function CategoriaPage({ slug, filtro }: { slug: string; filtro: typeof NOTICIAS_FILTROS[string] }) {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("posts")
+    .select("id, slug, title, excerpt, featured_image, category, region, published_at")
+    .not("published_at", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(48);
+
+  if (filtro.tipo === "region") {
+    query = query.eq("region", filtro.valor);
+  } else {
+    query = query.eq("category", filtro.valor);
+  }
+
+  const { data: posts } = await query;
+
+  const FILTROS = [
+    { label: "Todas",           href: "/noticias" },
+    { label: "Espírito Santo",  href: "/noticias/es" },
+    { label: "Minas Gerais",    href: "/noticias/mg" },
+    { label: "Brasil",          href: "/noticias/brasil" },
+    { label: "Economia",        href: "/noticias/economia" },
+    { label: "Tecnologia",      href: "/noticias/tecnologia" },
+    { label: "Sustentabilidade",href: "/noticias/sustentabilidade" },
+    { label: "Segurança",       href: "/noticias/seguranca" },
+  ];
+
+  return (
+    <main className="max-w-7xl mx-auto px-4 py-10">
+      <div className="border-l-4 border-[#C9A84C] pl-4 mb-8">
+        <h1 className="text-3xl font-bold text-[#1A2B4A]">{filtro.label}</h1>
+        <p className="text-gray-500 mt-1">{filtro.descricao}</p>
+      </div>
+
+      <div className="flex gap-2 flex-wrap mb-8">
+        {FILTROS.map((f) => (
+          <Link
+            key={f.href}
+            href={f.href}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors
+              ${f.href === `/noticias/${slug}`
+                ? "bg-[#1A2B4A] text-white border-[#1A2B4A]"
+                : "border-gray-200 text-gray-600 hover:border-[#1A2B4A] hover:text-[#1A2B4A]"}`}
+          >
+            {f.label}
+          </Link>
+        ))}
+      </div>
+
+      {!posts?.length ? (
+        <div className="text-center py-20">
+          <p className="text-gray-400 text-lg">Nenhuma notícia nesta categoria ainda.</p>
+          <p className="text-gray-400 text-sm mt-2">O pipeline automático publica novas notícias a cada 3 horas.</p>
+          <Link href="/noticias" className="mt-6 inline-block text-sm text-[#1A2B4A] underline">Ver todas as notícias</Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post) => (
+            <Link
+              key={post.id}
+              href={`/noticias/${post.slug}`}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-shadow"
+            >
+              <div className="aspect-video bg-gray-100 overflow-hidden">
+                {post.featured_image ? (
+                  <img src={post.featured_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-3xl font-bold text-gray-200">PM</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <div className="flex gap-2 mb-2">
+                  {post.category && <span className="text-xs font-semibold text-orange-500 uppercase tracking-wide">{post.category}</span>}
+                  {post.region && <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{post.region}</span>}
+                </div>
+                <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-[#1A2B4A] transition-colors">{post.title}</h3>
+                {post.excerpt && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>}
+                {post.published_at && (
+                  <p className="text-xs text-gray-400 mt-3">
+                    {format(new Date(post.published_at), "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+async function buscarPost(slug: string) {
   const supabase = await createClient();
 
   const { data: post } = await supabase
@@ -35,10 +221,9 @@ export default async function PostPage({ params }: Props) {
     .not("published_at", "is", null)
     .single();
 
-  if (!post) notFound();
+  if (!post) return null;
 
   let hasAccess = !post.is_exclusive;
-
   if (post.is_exclusive) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -53,96 +238,22 @@ export default async function PostPage({ params }: Props) {
     }
   }
 
-  return (
-    <article className="max-w-3xl mx-auto px-4 py-10">
+  return { ...post, hasAccess };
+}
 
-      {/* Voltar */}
-      <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-900 transition-colors mb-8">
-        <ArrowLeft size={16} />
-        Voltar para o início
-      </Link>
+// ─── Entry point ──────────────────────────────────────────────────────────────
 
-      {/* Categoria e região */}
-      <div className="flex items-center gap-3 mb-4">
-        {post.category && (
-          <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">
-            {post.category}
-          </span>
-        )}
-        {post.region && (
-          <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
-            {post.region}
-          </span>
-        )}
-        {post.is_exclusive && (
-          <span className="bg-blue-900 text-white text-xs font-semibold px-3 py-1 rounded-full">
-            EXCLUSIVO
-          </span>
-        )}
-      </div>
+export default async function SlugPage({ params }: Props) {
+  const { slug } = await params;
 
-      {/* Título */}
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-4">
-        {post.title}
-      </h1>
+  // 1. Tenta encontrar o post
+  const post = await buscarPost(slug);
+  if (post) return <PostPage post={post} />;
 
-      {/* Data */}
-      {post.published_at && (
-        <time className="text-sm text-gray-500 block mb-8">
-          {format(new Date(post.published_at), "d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-        </time>
-      )}
+  // 2. Verifica se é uma categoria/filtro conhecida
+  const filtro = NOTICIAS_FILTROS[slug];
+  if (filtro) return <CategoriaPage slug={slug} filtro={filtro} />;
 
-      {/* Imagem destaque */}
-      {post.featured_image && (
-        <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
-          <Image src={post.featured_image} alt={post.title} fill className="object-cover" priority />
-        </div>
-      )}
-
-      {/* Conteúdo ou Paywall */}
-      {hasAccess ? (
-        <div
-          className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-700"
-          dangerouslySetInnerHTML={{ __html: post.content ?? "<p>Conteúdo em breve.</p>" }}
-        />
-      ) : (
-        <div>
-          <div className="prose prose-lg max-w-none text-gray-500 line-clamp-3">
-            <p>{post.excerpt}</p>
-          </div>
-
-          {/* Blur effect */}
-          <div className="relative mt-4">
-            <div className="prose prose-lg max-w-none blur-sm select-none pointer-events-none text-gray-400">
-              <p>Lorem ipsum dolor sit amet consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation.</p>
-              <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident.</p>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
-          </div>
-
-          {/* Paywall box */}
-          <div className="mt-8 rounded-2xl border-2 border-blue-900/20 bg-blue-50 p-8 text-center">
-            <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-xl">🔒</span>
-            </div>
-            <h3 className="text-xl font-bold text-blue-900 mb-2">
-              Conteúdo exclusivo para assinantes
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Acesse este e todos os conteúdos exclusivos por apenas <strong>R$ 290/mês</strong>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/assinatura" className="bg-orange-500 text-white font-semibold px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors">
-                Ver planos
-              </Link>
-              <Link href="/login" className="border-2 border-blue-900 text-blue-900 font-semibold px-6 py-3 rounded-lg hover:bg-blue-900 hover:text-white transition-colors">
-                Já sou assinante
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-    </article>
-  );
+  // 3. 404
+  notFound();
 }
