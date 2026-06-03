@@ -164,7 +164,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 shadow-md">
+    <header className="fixed top-0 left-0 right-0 z-50 shadow-md w-full">
 
       {/* Faixa superior branca — logo centralizada */}
       <div className="bg-white border-b border-gray-100 transition-all duration-300">

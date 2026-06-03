@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={inter.variable}>
       <body className="bg-gray-50 text-gray-900 antialiased flex flex-col min-h-screen">
         <Header />
+        <div className="h-[190px] shrink-0" aria-hidden="true" />
         <div className="flex-1">{children}</div>
         <Footer />
         <Toaster position="top-right" />
