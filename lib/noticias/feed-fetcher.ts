@@ -115,6 +115,46 @@ async function fetchRSSFeed(feed: { url: string; nome: string }, tipoFonte: Tipo
   );
 }
 
+// ─── Scrapers HTML (sites sem RSS) ───────────────────────────────────────────
+
+async function fetchSindiferes(): Promise<FeedItem[]> {
+  return safeRun(
+    async () => {
+      const res = await fetch('https://www.sindiferes.com.br', {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+
+      const items: FeedItem[] = [];
+      // Extrai blocos de artigos: <h2...><a href="url">titulo</a></h2> ou <h3...><a ...>
+      const blocoRe = /<(?:h[2-4]|article)[^>]*>[\s\S]*?<a\s+href="(https?:\/\/www\.sindiferes\.com\.br\/[^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<\/(?:h[2-4]|article)>/gi;
+      let m: RegExpExecArray | null;
+      const vistos = new Set<string>();
+
+      while ((m = blocoRe.exec(html)) !== null) {
+        const url = m[1].trim();
+        const titulo = m[2].replace(/<[^>]+>/g, '').trim();
+        if (!titulo || titulo.length < 10 || vistos.has(url)) continue;
+        vistos.add(url);
+        items.push({
+          titulo,
+          url,
+          conteudo: titulo,
+          publicadoEm: new Date(),
+          fonteNome: 'SINDIFER-ES',
+          tipoFonte: 'rss-dedicado',
+        });
+        if (items.length >= 10) break;
+      }
+
+      return items;
+    },
+    { fallback: [] as FeedItem[] }
+  );
+}
+
 // ─── APIs de notícias ─────────────────────────────────────────────────────────
 async function fetchGNews(): Promise<FeedItem[]> {
   const key = process.env.GNEWS_API_KEY;
@@ -266,11 +306,16 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const resultados = await Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado')));
+    const [dedicados, sindiferes] = await Promise.all([
+      Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
+      fetchSindiferes(),
+    ]);
     for (let i = 0; i < FEEDS_DEDICADO.length; i++) {
-      feedStats[FEEDS_DEDICADO[i].nome] = resultados[i].length;
-      all.push(...resultados[i]);
+      feedStats[FEEDS_DEDICADO[i].nome] = dedicados[i].length;
+      all.push(...dedicados[i]);
     }
+    feedStats['SINDIFER-ES'] = sindiferes.length;
+    all.push(...sindiferes);
   }
 
   const validos = all.filter(i => i.titulo && i.url && dentroDoLimite(i));

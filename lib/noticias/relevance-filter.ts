@@ -23,6 +23,8 @@ const PESOS: [string, number][] = [
   ['exportação aço', 1],
   ['fornos industriais', 1],
   // Espírito Santo — canal ES
+  ['sindiferes', 4],
+  ['sindicato ferro aço es', 3],
   ['espírito santo', 3],
   ['vitória es', 2],
   ['serra es', 2],
