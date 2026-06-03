@@ -21,48 +21,70 @@ type RewriteResult = {
 };
 
 export async function reescreverComIA(item: FeedItem): Promise<RewriteResult> {
-  return safeRun(
+  const model = getGemini();
+  const contexto = `Título: ${item.titulo}\nFonte: ${item.fonteNome}\nConteúdo: ${item.conteudo.slice(0, 800)}`;
+
+  // ── Chamada 1: metadados (JSON pequeno, sem HTML) ─────────────────────────
+  const metadados = await safeRun(
     async () => {
-      const model = getGemini();
-      const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração).
+      const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
+Analise a notícia abaixo e responda APENAS com JSON válido (sem markdown, sem explicações):
+{"titulo":"string (máx 90 chars, objetivo)","resumo":"string (máx 200 chars, 1 frase)","categoria":"Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia","regiao":"ES|MG|Brasil|Internacional"}
 
-Com base na notícia abaixo, escreva uma matéria jornalística completa em português brasileiro.
-
-NOTÍCIA ORIGINAL:
-Título: ${item.titulo}
-Fonte: ${item.fonteNome}
-Conteúdo: ${item.conteudo.slice(0, 800)}
-
-Responda APENAS com JSON válido, sem markdown, sem explicações:
-{
-  "titulo": "string (máximo 90 caracteres, objetivo e informativo, sem clickbait)",
-  "resumo": "string (máximo 200 caracteres, resume o fato principal em uma frase)",
-  "conteudo": "string (matéria completa em HTML com 4 a 6 parágrafos usando apenas tags <p>. Escreva como jornalista: contextualize o fato, apresente dados, explique o impacto para o setor industrial. Mínimo 300 palavras.)",
-  "categoria": "uma de: Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia",
-  "regiao": "uma de: ES|MG|Brasil|Internacional"
-}`;
+NOTÍCIA:
+${contexto}`;
 
       const result = await model.generateContent(prompt);
-      const text = result.response.text().trim();
-      const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
-      const parsed = JSON.parse(json) as RewriteResult;
-
-      return {
-        titulo: (parsed.titulo || item.titulo).slice(0, 90),
-        resumo: (parsed.resumo || item.conteudo).slice(0, 200),
-        conteudo: parsed.conteudo || `<p>${parsed.resumo || item.conteudo}</p>`,
-        categoria: CATEGORIAS_VALIDAS.includes(parsed.categoria) ? parsed.categoria : 'Mercado',
-        regiao: REGIOES_VALIDAS.includes(parsed.regiao) ? parsed.regiao : 'Brasil',
-      };
+      const text = result.response.text().trim()
+        .replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+      return JSON.parse(text) as { titulo: string; resumo: string; categoria: string; regiao: string };
     },
     {
       fallback: {
         titulo: item.titulo.slice(0, 90),
         resumo: item.conteudo.slice(0, 200),
-        conteudo: `<p>${item.conteudo.slice(0, 200)}</p>`,
         categoria: 'Mercado',
         regiao: 'Brasil',
       },
     }
   );
+
+  // ── Chamada 2: artigo completo (HTML direto, sem JSON) ────────────────────
+  const conteudo = await safeRun(
+    async () => {
+      const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
+
+Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguagem profissional e objetiva.
+
+INSTRUÇÕES:
+- Escreva entre 5 e 7 parágrafos usando APENAS tags <p>
+- Contextualize o fato para profissionais do setor
+- Mencione impactos econômicos, dados relevantes e perspectivas
+- Mínimo absoluto: 350 palavras
+- NÃO use outros elementos HTML além de <p>
+- Responda APENAS com o HTML dos parágrafos, sem explicações, sem título
+
+NOTÍCIA:
+${contexto}`;
+
+      const result = await model.generateContent(prompt);
+      const html = result.response.text().trim()
+        .replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+      // Garante que começa com <p>
+      if (!html.startsWith('<p>')) return `<p>${html}</p>`;
+      return html;
+    },
+    {
+      fallback: `<p>${metadados.resumo}</p>`,
+    }
+  );
+
+  return {
+    titulo: (metadados.titulo || item.titulo).slice(0, 90),
+    resumo: (metadados.resumo || item.conteudo).slice(0, 200),
+    conteudo,
+    categoria: CATEGORIAS_VALIDAS.includes(metadados.categoria) ? metadados.categoria : 'Mercado',
+    regiao: REGIOES_VALIDAS.includes(metadados.regiao) ? metadados.regiao : 'Brasil',
+  };
 }
