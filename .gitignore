@@ -13,4 +13,8 @@ yarn-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# Artefatos temporários de debug/testes
+.playwright-mcp/
+*.png
+*.jpeg
+*.jpg
