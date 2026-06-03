@@ -71,7 +71,7 @@ async function FiltroPage({ slug }: { slug: string }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {eventos.map((ev) => <EventCard key={ev.id} evento={ev} activeSlug={slug} />)}
+          {eventos.map((ev) => <EventCard key={ev.id} evento={ev} />)}
         </div>
       )}
     </main>
