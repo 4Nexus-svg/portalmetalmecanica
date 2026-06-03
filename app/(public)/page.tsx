@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ColunistasCarrossel from "@/components/ui/ColunistasCarrossel";
 
 export const revalidate = 300;
 
@@ -31,7 +32,8 @@ export default async function HomePage() {
   const ultimasNoticias = posts?.slice(10, 16) ?? [];
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6">
+    <>
+    <div className="max-w-7xl mx-auto px-4 pt-6">
 
       {/* MANCHETE PRINCIPAL */}
       {destaque && (
@@ -100,10 +102,16 @@ export default async function HomePage() {
       )}
 
       {/* LINHA DIVISÓRIA DOURADA */}
-      <div className="h-0.5 bg-gradient-to-r from-[#C9A84C] via-[#e8c97a] to-[#C9A84C] mb-8" />
+      <div className="h-0.5 bg-gradient-to-r from-[#C9A84C] via-[#e8c97a] to-[#C9A84C]" />
+    </div>
+
+    {/* FAIXA COLUNISTAS — full-width */}
+    <ColunistasCarrossel colunistas={COLUNISTAS} />
+
+    <div className="max-w-7xl mx-auto px-4 pb-8">
 
       {/* CONTEÚDO PRINCIPAL + SIDEBAR */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
 
         {/* COLUNA PRINCIPAL */}
         <div className="lg:col-span-2 space-y-8">
@@ -140,30 +148,6 @@ export default async function HomePage() {
                       </p>
                     )}
                   </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Seção colunistas */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-6 bg-[#C9A84C] rounded" />
-                <h2 className="text-lg font-bold text-[#1A2B4A] uppercase tracking-wide">Colunistas</h2>
-              </div>
-              <Link href="/colunistas" className="text-sm text-[#C9A84C] font-medium hover:underline">
-                Ver todos
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {COLUNISTAS.map((col) => (
-                <Link key={col.slug} href={"/colunistas/" + col.slug} className="group bg-white rounded-xl border border-gray-100 p-4 hover:shadow-md transition-shadow text-center">
-                  <div className={`w-12 h-12 rounded-full ${col.cor} flex items-center justify-center mx-auto mb-2`}>
-                    <span className="text-white font-bold">{col.iniciais}</span>
-                  </div>
-                  <p className="font-semibold text-sm text-[#1A2B4A] group-hover:text-[#C9A84C] transition-colors leading-tight">{col.nome}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{col.especialidade}</p>
                 </Link>
               ))}
             </div>
@@ -272,6 +256,7 @@ export default async function HomePage() {
 
         </aside>
       </div>
-    </main>
+    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Search, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import SearchBar from "@/components/ui/SearchBar";
 
 const CANAIS = [
@@ -152,31 +152,38 @@ const CANAIS = [
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 shadow-md">
 
       {/* Faixa superior branca — logo centralizada */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-100 transition-all duration-300">
+        <div className={`max-w-7xl mx-auto px-4 flex items-center justify-between transition-all duration-300 ${scrolled ? "py-2" : "py-6"}`}>
 
           {/* Esquerda: busca */}
           <div className="flex items-center gap-2 w-32">
             <SearchBar />
           </div>
 
-{/* Centro: logo + slogan */}
-<Link href="/" className="flex flex-col items-center justify-center">
-  {/* eslint-disable-next-line @next/next/no-img-element */}
-  <img
-    src="/logo.png"
-    alt="Portal Metalmecânica"
-    className="h-20 w-auto object-contain"
-  />
-  <span className="text-xs font-medium tracking-widest text-[#C9A84C] uppercase mt-1">
-    Informações que movem a Indústria
-  </span>
-</Link>
+          {/* Centro: logo + slogan */}
+          <Link href="/" className="flex flex-col items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Portal Metalmecânica"
+              className={`w-auto object-contain transition-all duration-300 ${scrolled ? "h-10" : "h-20"}`}
+            />
+            <span className={`text-xs font-medium tracking-widest text-[#C9A84C] uppercase mt-1 transition-all duration-300 ${scrolled ? "opacity-0 h-0 overflow-hidden mt-0" : "opacity-100"}`}>
+              Informações que movem a Indústria
+            </span>
+          </Link>
 
           {/* Direita: entrar + assinar */}
           <div className="flex items-center gap-3 w-32 justify-end">
