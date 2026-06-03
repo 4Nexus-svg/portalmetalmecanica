@@ -4,10 +4,11 @@ import { safeRun } from './utils';
 // ─── Termos de busca para APIs ────────────────────────────────────────────────
 // Organizados por categoria para cobrir todos os filtros do portal
 const TERMOS = [
-  // Geral — metalmecânica/siderurgia
+  // Geral — metalmecânica/siderurgia/petróleo
   'metalmecânica siderurgia Brasil',
   'metalurgia aço indústria',
   'Usiminas Vallourec CSN siderurgia',
+  'Petrobras indústria petróleo gás',
   // ES — Espírito Santo
   'indústria Espírito Santo',
   'Vale Portos Espírito Santo industrial',
@@ -49,6 +50,8 @@ const FEEDS_DEDICADO: { url: string; nome: string }[] = [
   { url: 'https://www.iba.org.br/feed/', nome: 'IBÁ' },
   // Segurança do trabalho
   { url: 'https://www.gov.br/trabalho-e-emprego/pt-br/rss.xml', nome: 'MTE' },
+  // Petrobras
+  { url: 'https://petrobras.com.br/fatos-e-dados/feed/', nome: 'Petrobras' },
 ];
 
 // ─── Parsing RSS ──────────────────────────────────────────────────────────────

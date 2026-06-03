@@ -64,6 +64,12 @@ const PESOS: [string, number][] = [
   ['cipa', 2],
   ['pcmso', 2],
   ['ppra', 2],
+  // Petróleo & Gás
+  ['petrobras', 4],
+  ['petróleo gás brasil', 3],
+  ['pré-sal', 2],
+  ['refinaria', 2],
+  ['offshore industrial', 2],
   // Economia industrial
   ['pib indústria', 2],
   ['investimento industrial', 2],
