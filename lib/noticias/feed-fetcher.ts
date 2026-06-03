@@ -161,6 +161,8 @@ const fetchFenaf      = () => fetchSiteGenerico('https://abifa.org.br/site/fenaf
 const fetchFesqua     = () => fetchSiteGenerico('https://fesqua.com.br', 'FESQUA', 'fesqua.com.br');
 const fetchMetalurgia = () => fetchSiteGenerico('https://metalurgia.com.br', 'Feira Metalurgia', 'metalurgia.com.br');
 const fetchAbimaq     = () => fetchSiteGenerico('https://abimaq.org.br/noticias', 'ABIMAQ', 'abimaq.org.br');
+const fetchExposibram = () => fetchSiteGenerico('https://exposibram2026.ibram.org.br', 'EXPOSIBRAM', 'ibram.org.br');
+const fetchExpoUsipa  = () => fetchSiteGenerico('https://expousipa.com', 'Expo Usipa', 'expousipa.com');
 
 async function fetchSindiferes(): Promise<FeedItem[]> {
   return safeRun(
@@ -359,7 +361,7 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia, abimaq] = await Promise.all([
+    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia, abimaq, exposibram, expousipa] = await Promise.all([
       Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
       fetchSindiferes(),
       fetchMecShow(),
@@ -367,6 +369,8 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
       fetchFesqua(),
       fetchMetalurgia(),
       fetchAbimaq(),
+      fetchExposibram(),
+      fetchExpoUsipa(),
     ]);
     for (let i = 0; i < FEEDS_DEDICADO.length; i++) {
       feedStats[FEEDS_DEDICADO[i].nome] = dedicados[i].length;
@@ -375,7 +379,7 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
     for (const [nome, lote] of [
       ['SINDIFER-ES', sindiferes], ['MecShow', mecshow],
       ['FENAF', fenaf], ['FESQUA', fesqua], ['Feira Metalurgia', metalurgia],
-      ['ABIMAQ', abimaq],
+      ['ABIMAQ', abimaq], ['EXPOSIBRAM', exposibram], ['Expo Usipa', expousipa],
     ] as [string, FeedItem[]][]) {
       feedStats[nome] = lote.length;
       all.push(...lote);

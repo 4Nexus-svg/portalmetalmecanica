@@ -24,6 +24,7 @@ const PESOS: [string, number][] = [
   ['fornos industriais', 1],
   // Feiras e eventos do setor
   ['mecshow', 4], ['mec show', 4],
+  ['exposibram', 4], ['expo usipa', 4],
   ['fenaf', 4], ['feira fundição', 3],
   ['fesqua', 3], ['feira metalurgia', 3],
   ['feimec', 3], ['mercopar', 3],
