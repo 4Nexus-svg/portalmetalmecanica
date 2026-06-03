@@ -127,6 +127,47 @@ function nomeDoSite(url: string): string {
 
 // ─── Scrapers HTML (sites sem RSS) ───────────────────────────────────────────
 
+async function fetchMecShow(): Promise<FeedItem[]> {
+  return safeRun(
+    async () => {
+      const res = await fetch('https://www.mecshow.com.br', {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)' },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+
+      const items: FeedItem[] = [];
+      const vistos = new Set<string>();
+      const base = 'https://www.mecshow.com.br';
+
+      const linkRe = /<a\s[^>]*href="(https?:\/\/www\.mecshow\.com\.br\/[^"#?]+)"[^>]*>\s*([\s\S]{10,200}?)\s*<\/a>/gi;
+      let m: RegExpExecArray | null;
+
+      while ((m = linkRe.exec(html)) !== null) {
+        const url = m[1].trim();
+        const titulo = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (titulo.length < 15 || titulo.length > 200) continue;
+        if (/\/(category|tag|author|page|wp-|politica|cookie)\b/i.test(url)) continue;
+        if (vistos.has(url)) continue;
+        vistos.add(url);
+        items.push({
+          titulo,
+          url,
+          conteudo: titulo,
+          publicadoEm: new Date(),
+          fonteNome: 'MecShow',
+          tipoFonte: 'rss-dedicado',
+        });
+        if (items.length >= 10) break;
+      }
+
+      return items;
+    },
+    { fallback: [] as FeedItem[] }
+  );
+}
+
 async function fetchSindiferes(): Promise<FeedItem[]> {
   return safeRun(
     async () => {
@@ -324,9 +365,10 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const [dedicados, sindiferes] = await Promise.all([
+    const [dedicados, sindiferes, mecshow] = await Promise.all([
       Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
       fetchSindiferes(),
+      fetchMecShow(),
     ]);
     for (let i = 0; i < FEEDS_DEDICADO.length; i++) {
       feedStats[FEEDS_DEDICADO[i].nome] = dedicados[i].length;
@@ -334,6 +376,8 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
     }
     feedStats['SINDIFER-ES'] = sindiferes.length;
     all.push(...sindiferes);
+    feedStats['MecShow'] = mecshow.length;
+    all.push(...mecshow);
   }
 
   const validos = all.filter(i => i.titulo && i.url && dentroDoLimite(i));
