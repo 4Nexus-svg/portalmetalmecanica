@@ -7,6 +7,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email invalido" }, { status: 400 });
   }
   const supabase = await createServiceClient();
-  await supabase.from("subscribers").upsert({ email }, { onConflict: "email" });
+  await (supabase.from("subscribers") as any).upsert({ email }, { onConflict: "email" });
   return NextResponse.json({ success: true });
 }

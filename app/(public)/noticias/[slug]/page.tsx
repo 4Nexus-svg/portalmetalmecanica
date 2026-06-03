@@ -6,6 +6,10 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft } from "lucide-react";
 import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
+import { sanitizeContent } from "@/lib/sanitize";
+import type { Database } from "@/types/database";
+
+type Post = Database["public"]["Tables"]["posts"]["Row"];
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,9 +23,9 @@ export async function generateMetadata({ params }: Props) {
 
   const { data: post } = await supabase
     .from("posts")
-    .select("title, excerpt, featured_image")
+    .select("*")
     .eq("slug", slug)
-    .single();
+    .maybeSingle() as { data: Post | null; error: unknown };
 
   if (post) {
     return {
@@ -81,7 +85,7 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
       {post.hasAccess ? (
         <div
           className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-700"
-          dangerouslySetInnerHTML={{ __html: post.content ?? "<p>Conteúdo em breve.</p>" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeContent(post.content ?? "<p>Conteúdo em breve.</p>") }}
         />
       ) : (
         <div>
@@ -117,20 +121,17 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
 async function CategoriaPage({ slug, filtro }: { slug: string; filtro: typeof NOTICIAS_FILTROS[string] }) {
   const supabase = await createClient();
 
-  let query = supabase
+  const baseQuery = supabase
     .from("posts")
-    .select("id, slug, title, excerpt, featured_image, category, region, published_at")
+    .select("*")
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
     .limit(48);
 
-  if (filtro.tipo === "region") {
-    query = query.eq("region", filtro.valor);
-  } else {
-    query = query.eq("category", filtro.valor);
-  }
-
-  const { data: posts } = await query;
+  const { data: posts } = (filtro.tipo === "region"
+    ? await baseQuery.eq("region", filtro.valor)
+    : await baseQuery.eq("category", filtro.valor)
+  ) as { data: Post[] | null; error: unknown };
 
   const FILTROS = [
     { label: "Todas",           href: "/noticias" },
@@ -219,7 +220,7 @@ async function buscarPost(slug: string) {
     .select("*")
     .eq("slug", slug)
     .not("published_at", "is", null)
-    .single();
+    .maybeSingle() as { data: Post | null; error: unknown };
 
   if (!post) return null;
 

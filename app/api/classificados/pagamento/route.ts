@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const { classified_id } = await req.json() as { classified_id: number };
 
-  const { data: classified } = await supabase.from("classifieds").select("id, status, user_id")
+  const { data: classified } = await (supabase.from("classifieds") as any).select("id, status, user_id")
     .eq("id", classified_id).eq("user_id", user.id).single();
   if (!classified) return NextResponse.json({ error: "Nao encontrado" }, { status: 404 });
 

@@ -3,6 +3,9 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ColunistasCarrossel from "@/components/ui/ColunistasCarrossel";
+import type { Database } from "@/types/database";
+
+type Post = Database["public"]["Tables"]["posts"]["Row"];
 
 export const revalidate = 300;
 
@@ -20,10 +23,10 @@ export default async function HomePage() {
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, slug, title, excerpt, featured_image, category, region, published_at, is_exclusive")
+    .select("*")
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
-    .limit(20);
+    .limit(20) as { data: Post[] | null; error: unknown };
 
   const destaque = posts?.[0];
   const secundarias = posts?.slice(1, 4) ?? [];

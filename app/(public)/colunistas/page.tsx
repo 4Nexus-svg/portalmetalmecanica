@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import type { Database } from "@/types/database";
+
+type Columnist = Database["public"]["Tables"]["columnists"]["Row"];
 
 export const revalidate = 3600;
 
@@ -13,9 +16,9 @@ export default async function ColunistasPage() {
 
   const { data: colunistas } = await supabase
     .from("columnists")
-    .select("id, nome, slug, cargo, especialidade, bio, iniciais, cor")
+    .select("*")
     .eq("ativo", true)
-    .order("id");
+    .order("id") as { data: Columnist[] | null; error: unknown };
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">

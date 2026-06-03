@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createServiceClient();
 
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.CheckoutSession;
+    const session = event.data.object as Stripe.Checkout.Session;
     const subscriptionId = session.subscription as string;
     const userId = session.metadata?.user_id;
     if (!userId || !subscriptionId) return NextResponse.json({ received: true });
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const plan = subscription.items.data[0]?.price.id === process.env.STRIPE_PRICE_ID_YEARLY ? "yearly" : "monthly";
 
-    await supabase.from("subscriptions").upsert({
+    await (supabase.from("subscriptions") as any).upsert({
       id: subscriptionId, user_id: userId,
       status: subscription.status as "active" | "trialing",
       plan,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const subscription = event.data.object as Stripe.Subscription;
     const plan = subscription.items.data[0]?.price.id === process.env.STRIPE_PRICE_ID_YEARLY ? "yearly" : "monthly";
 
-    await supabase.from("subscriptions").update({
+    await (supabase.from("subscriptions") as any).update({
       status: subscription.status as "active" | "canceled" | "past_due",
       plan,
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),

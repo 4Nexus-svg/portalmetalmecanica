@@ -40,7 +40,7 @@ export default function NovoPostPage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from("posts").insert({
+    const { error } = await (supabase.from("posts") as any).insert({
       title: form.title,
       slug: form.slug,
       excerpt: form.excerpt || null,

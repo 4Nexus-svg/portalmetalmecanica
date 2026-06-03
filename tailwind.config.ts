@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#1A3A5C", light: "#2A5A8C", dark: "#0D1F2D" },
+        brand: { DEFAULT: "#1A2B4A", light: "#2A4B7A", dark: "#0D1A2D" },
         accent: { DEFAULT: "#E85D24", light: "#F27A48" },
       },
     },

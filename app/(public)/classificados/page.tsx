@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { Database } from "@/types/database";
+
+type Classified = Database["public"]["Tables"]["classifieds"]["Row"];
 
 export const revalidate = 60;
 
@@ -10,10 +13,10 @@ export default async function ClassificadosPage() {
 
   const { data: classificados } = await supabase
     .from("classifieds")
-    .select("id, title, description, price, city, state, category, created_at, photos")
+    .select("*")
     .eq("status", "active")
     .order("created_at", { ascending: false })
-    .limit(48);
+    .limit(48) as { data: Classified[] | null; error: unknown };
 
   const categorias = ["Todos", "Máquinas", "Equipamentos", "Peças", "Serviços", "Veículos", "Outros"];
 

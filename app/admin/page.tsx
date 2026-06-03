@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { Database } from "@/types/database";
+
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type Post    = Database["public"]["Tables"]["posts"]["Row"];
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -12,17 +16,17 @@ export default async function AdminPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, name")
+    .select("*")
     .eq("id", user.id)
-    .single();
+    .maybeSingle() as { data: Profile | null; error: unknown };
 
   if (profile?.role !== "admin") redirect("/");
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, slug, title, category, region, published_at, is_exclusive")
+    .select("*")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(50) as { data: Post[] | null; error: unknown };
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowLeft, MapPin, Phone, MessageCircle, Tag, Calendar } from "lucide-react";
+import type { Database } from "@/types/database";
+
+type Classified = Database["public"]["Tables"]["classifieds"]["Row"];
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -16,10 +19,9 @@ export async function generateMetadata({ params }: Props) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("classifieds")
-    .select("title, description, photos")
+    .select("*")
     .eq("id", Number(id))
-    .eq("status", "active")
-    .single();
+    .maybeSingle() as { data: Classified | null; error: unknown };
   if (!data) return {};
   return {
     title: `${data.title} — Classificados | Portal Metalmecânica`,
@@ -38,12 +40,11 @@ export default async function ClassificadoPage({ params }: Props) {
 
   const { data } = await supabase
     .from("classifieds")
-    .select("id, title, description, price, city, state, category, photos, phone, whatsapp, created_at, expires_at")
+    .select("*")
     .eq("id", Number(id))
-    .eq("status", "active")
-    .single();
+    .maybeSingle() as { data: Classified | null; error: unknown };
 
-  if (!data) notFound();
+  if (!data || data.status !== "active") notFound();
 
   const fotos = data.photos ?? [];
   const temContato = data.phone || data.whatsapp;

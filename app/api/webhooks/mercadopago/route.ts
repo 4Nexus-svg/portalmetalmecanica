@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
 
-  await supabase.from("classifieds").update({
+  await (supabase.from("classifieds") as any).update({
     status: "active",
     expires_at: expiresAt.toISOString(),
     payment_intent_id: String(paymentId),

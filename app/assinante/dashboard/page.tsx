@@ -3,17 +3,20 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Database } from "@/types/database";
+
+type Profile      = Database["public"]["Tables"]["profiles"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type Post         = Database["public"]["Tables"]["posts"]["Row"];
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("name, email").eq("id", user.id).single();
-  const { data: subscription } = await supabase.from("subscriptions").select("*")
-    .eq("user_id", user.id).eq("status", "active").maybeSingle();
-  const { data: posts } = await supabase.from("posts").select("id, slug, title, category, published_at")
-    .eq("is_exclusive", true).not("published_at", "is", null).order("published_at", { ascending: false }).limit(10);
+  const { data: profile }      = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle() as { data: Profile | null; error: unknown };
+  const { data: subscription } = await supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("status", "active").maybeSingle() as { data: Subscription | null; error: unknown };
+  const { data: posts }        = await supabase.from("posts").select("*").eq("is_exclusive", true).not("published_at", "is", null).order("published_at", { ascending: false }).limit(10) as { data: Post[] | null; error: unknown };
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-10">

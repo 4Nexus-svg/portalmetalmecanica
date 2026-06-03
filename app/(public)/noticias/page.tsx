@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { Database } from "@/types/database";
+
+type Post = Database["public"]["Tables"]["posts"]["Row"];
 
 export const revalidate = 60;
 
@@ -26,10 +29,10 @@ export default async function NoticiasPage() {
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, slug, title, excerpt, featured_image, category, region, published_at")
+    .select("*")
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
-    .limit(48);
+    .limit(48) as { data: Post[] | null; error: unknown };
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
