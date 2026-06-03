@@ -160,6 +160,7 @@ const fetchMecShow    = () => fetchSiteGenerico('https://www.mecshow.com.br', 'M
 const fetchFenaf      = () => fetchSiteGenerico('https://abifa.org.br/site/fenaf/', 'FENAF', 'abifa.org.br');
 const fetchFesqua     = () => fetchSiteGenerico('https://fesqua.com.br', 'FESQUA', 'fesqua.com.br');
 const fetchMetalurgia = () => fetchSiteGenerico('https://metalurgia.com.br', 'Feira Metalurgia', 'metalurgia.com.br');
+const fetchAbimaq     = () => fetchSiteGenerico('https://abimaq.org.br/noticias', 'ABIMAQ', 'abimaq.org.br');
 
 async function fetchSindiferes(): Promise<FeedItem[]> {
   return safeRun(
@@ -358,13 +359,14 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia] = await Promise.all([
+    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia, abimaq] = await Promise.all([
       Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
       fetchSindiferes(),
       fetchMecShow(),
       fetchFenaf(),
       fetchFesqua(),
       fetchMetalurgia(),
+      fetchAbimaq(),
     ]);
     for (let i = 0; i < FEEDS_DEDICADO.length; i++) {
       feedStats[FEEDS_DEDICADO[i].nome] = dedicados[i].length;
@@ -373,6 +375,7 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
     for (const [nome, lote] of [
       ['SINDIFER-ES', sindiferes], ['MecShow', mecshow],
       ['FENAF', fenaf], ['FESQUA', fesqua], ['Feira Metalurgia', metalurgia],
+      ['ABIMAQ', abimaq],
     ] as [string, FeedItem[]][]) {
       feedStats[nome] = lote.length;
       all.push(...lote);
