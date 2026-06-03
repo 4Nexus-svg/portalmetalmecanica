@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { BannerSlot } from "@/components/ui/BannerSlot";
 
-export default function Footer() {
+export default async function Footer() {
   return (
     <footer className="bg-[#1A2B4A] text-white mt-16">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <BannerSlot position="footer" />
+        </div>
         <div className="h-1 bg-gradient-to-r from-[#C9A84C] via-[#e8c97a] to-[#C9A84C]" />
       <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
         

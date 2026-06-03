@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { BannerSlot } from "@/components/ui/BannerSlot";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -21,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-50 text-gray-900 antialiased flex flex-col min-h-screen">
         <Header />
         <div className="h-[190px] shrink-0" aria-hidden="true" />
+        <div className="max-w-7xl mx-auto px-4 w-full">
+          <BannerSlot position="top" className="mb-4" />
+        </div>
         <div className="flex-1">{children}</div>
         <Footer />
         <Toaster position="top-right" />

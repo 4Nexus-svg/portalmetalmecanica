@@ -3,6 +3,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ColunistasCarrossel from "@/components/ui/ColunistasCarrossel";
+import { BannerSlot } from "@/components/ui/BannerSlot";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
@@ -156,6 +157,9 @@ export default async function HomePage() {
             </div>
           </section>
 
+          {/* Banner entre seções */}
+          <BannerSlot position="between" className="my-4" />
+
           {/* Últimas notícias lista */}
           {ultimasNoticias.length > 0 && (
             <section>
@@ -189,6 +193,9 @@ export default async function HomePage() {
 
         {/* SIDEBAR */}
         <aside className="space-y-6">
+
+          {/* Banner sidebar */}
+          <BannerSlot position="sidebar" className="mb-6" />
 
           {/* Mais lidas */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
