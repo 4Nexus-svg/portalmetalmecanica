@@ -128,15 +128,26 @@ async function fetchSindiferes(): Promise<FeedItem[]> {
       const html = await res.text();
 
       const items: FeedItem[] = [];
-      // Extrai blocos de artigos: <h2...><a href="url">titulo</a></h2> ou <h3...><a ...>
-      const blocoRe = /<(?:h[2-4]|article)[^>]*>[\s\S]*?<a\s+href="(https?:\/\/www\.sindiferes\.com\.br\/[^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<\/(?:h[2-4]|article)>/gi;
-      let m: RegExpExecArray | null;
       const vistos = new Set<string>();
+      const base = 'https://www.sindiferes.com.br';
 
-      while ((m = blocoRe.exec(html)) !== null) {
-        const url = m[1].trim();
-        const titulo = m[2].replace(/<[^>]+>/g, '').trim();
-        if (!titulo || titulo.length < 10 || vistos.has(url)) continue;
+      // Captura qualquer link interno que pareça um artigo/notícia
+      const linkRe = /<a\s[^>]*href="([^"]*sindiferes\.com\.br\/[^"#?]+|\/[a-z0-9-]{10,}\/[^"#?]*)"[^>]*>\s*([\s\S]{10,200}?)\s*<\/a>/gi;
+      let m: RegExpExecArray | null;
+
+      while ((m = linkRe.exec(html)) !== null) {
+        let url = m[1].trim();
+        const titulo = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+        // Resolve URLs relativas
+        if (url.startsWith('/')) url = base + url;
+
+        // Filtra: só links internos, exclui menus/categorias/home
+        if (!url.includes('sindiferes.com.br')) continue;
+        if (/\/(category|tag|author|page|wp-|#|feed|login|cadastro)\b/i.test(url)) continue;
+        if (titulo.length < 15 || titulo.length > 200) continue;
+        if (vistos.has(url)) continue;
+
         vistos.add(url);
         items.push({
           titulo,
@@ -242,30 +253,27 @@ async function fetchCurrents(): Promise<FeedItem[]> {
 async function fetchNewsAPI(): Promise<FeedItem[]> {
   const key = process.env.NEWSAPI_KEY;
   if (!key) return [];
-  const items: FeedItem[] = [];
-  for (const termo of TERMOS_NEWSAPI) {
-    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(termo)}&language=pt&pageSize=15&apiKey=${key}`;
-    const data = await safeRun(
-      async () => {
-        const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-        return res.json() as Promise<{ articles?: { title: string; url: string; description: string | null; publishedAt: string; urlToImage?: string }[] }>;
-      },
-      { fallback: { articles: [] } }
-    );
-    for (const a of data.articles ?? []) {
-      if (a.title === '[Removed]' || !a.url) continue;
-      items.push({
-        titulo: a.title,
-        url: a.url,
-        conteudo: a.description ?? '',
-        publicadoEm: new Date(a.publishedAt),
-        imagemUrl: a.urlToImage,
-        fonteNome: 'NewsAPI',
-        tipoFonte: 'api' as TipoFonte,
-      });
-    }
-  }
-  return items;
+  // Uma única busca ampla para preservar cota diária do plano gratuito
+  const termo = 'siderurgia metalurgia aço automação industrial Brasil';
+  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(termo)}&language=pt&pageSize=20&sortBy=publishedAt&apiKey=${key}`;
+  const data = await safeRun(
+    async () => {
+      const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+      return res.json() as Promise<{ articles?: { title: string; url: string; description: string | null; publishedAt: string; urlToImage?: string }[] }>;
+    },
+    { fallback: { articles: [] } }
+  );
+  return (data.articles ?? [])
+    .filter(a => a.title !== '[Removed]' && a.url)
+    .map(a => ({
+      titulo: a.title,
+      url: a.url,
+      conteudo: a.description ?? '',
+      publicadoEm: new Date(a.publishedAt),
+      imagemUrl: a.urlToImage,
+      fonteNome: 'NewsAPI',
+      tipoFonte: 'api' as TipoFonte,
+    }));
 }
 
 // ─── Validação de data ────────────────────────────────────────────────────────
