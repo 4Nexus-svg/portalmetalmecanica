@@ -30,14 +30,13 @@ export async function GET(req: NextRequest) {
   const modo = req.nextUrl.searchParams.get('modo') ?? 'todos';
   const dry = req.nextUrl.searchParams.get('dry') === 'true';
 
-  const resultado: ResultadoPipeline & { errosMensagens?: string[] } = {
+  const resultado: ResultadoPipeline = {
     inseridas: 0,
     duplicadas: 0,
     irrelevantes: 0,
     erros: 0,
     abortado: false,
     feedStats: {},
-    errosMensagens: [],
   };
 
   try {
@@ -100,10 +99,9 @@ export async function GET(req: NextRequest) {
           marcarVisto(item, linksSeen, titulosSeen);
           resultado.inseridas++;
           errosConsecutivos = 0;
-        } catch (err) {
+        } catch {
           resultado.erros++;
           errosConsecutivos++;
-          resultado.errosMensagens!.push(err instanceof Error ? err.message : String(err));
           if (errosConsecutivos >= MAX_ERROS_CONSECUTIVOS) {
             resultado.abortado = true;
           }
