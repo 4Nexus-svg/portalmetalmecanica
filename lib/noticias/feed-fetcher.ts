@@ -179,9 +179,11 @@ async function fetchFundacentro(): Promise<FeedItem[]> {
           effective?: string;
         }[];
       };
+      const EXCLUIR = /falecimento|obituário|in memoriam|nota de pesar|passamento/i;
       const items: FeedItem[] = [];
       for (const a of data.items ?? []) {
         if (!a['@id'] || !a.title) continue;
+        if (EXCLUIR.test(a.title)) continue;
         const publicadoEm = a.effective ? new Date(a.effective) : new Date();
         if (isNaN(publicadoEm.getTime())) continue;
         items.push({
