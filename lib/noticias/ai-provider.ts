@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_MODEL     = process.env.GEMINI_MODEL     ?? 'gemini-2.5-flash-lite';
 const GROQ_MODEL       = process.env.GROQ_MODEL       ?? 'llama-3.3-70b-versatile';
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'meta-llama/llama-3.3-70b-instruct:free';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-oss-120b:free';
 
 function deveUsarFallback(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
