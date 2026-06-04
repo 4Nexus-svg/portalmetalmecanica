@@ -68,8 +68,8 @@ export default async function IndicadoresPage() {
 
       {/* Rodape informativo */}
       <div className="mt-12 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400">
-        <strong className="text-gray-500">Fontes:</strong> AwesomeAPI (câmbio), brapi.dev via Yahoo
-        Finance (ações e commodities), Banco Central do Brasil (Selic), MDIC Comex Stat
+        <strong className="text-gray-500">Fontes:</strong> Open Exchange Rates (câmbio), brapi.dev
+        (Ibovespa), Yahoo Finance (commodities), Banco Central do Brasil (Selic), MDIC Comex Stat
         (exportações), IBGE SIDRA (produção industrial). Dados com fins informativos — não
         constituem recomendação de investimento.
       </div>
