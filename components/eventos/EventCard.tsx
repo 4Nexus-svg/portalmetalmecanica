@@ -7,6 +7,16 @@ import type { Database } from "@/types/database";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 
+function isValidUrl(url: string): boolean {
+  if (/[\s\\]/.test(url)) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function EventCard({ evento }: { evento: Event }) {
   const tipo = evento.type as TipoEvento;
   const corBadge = TIPO_CORES[tipo] ?? "bg-gray-100 text-gray-600";
@@ -18,7 +28,7 @@ export function EventCard({ evento }: { evento: Event }) {
       className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-shadow"
     >
       <div className="aspect-video bg-gradient-to-br from-[#1A2B4A] to-[#0f1e35] flex items-center justify-center overflow-hidden">
-        {evento.image_url ? (
+        {evento.image_url && isValidUrl(evento.image_url) ? (
           <img src={evento.image_url} alt={evento.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <Calendar size={40} className="text-[#C9A84C] opacity-50" />

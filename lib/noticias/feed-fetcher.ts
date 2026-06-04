@@ -156,6 +156,46 @@ async function fetchSiteGenerico(url: string, nome: string, dominioBase: string)
   );
 }
 
+async function fetchFundacentro(): Promise<FeedItem[]> {
+  return safeRun(
+    async () => {
+      const url = 'https://www.gov.br/fundacentro/++api++/pt-br/comunicacao/noticias/@search?portal_type=News+Item&sort_on=effective&sort_order=descending&b_size=20';
+      const res = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)',
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json() as {
+        items?: {
+          '@id': string;
+          title: string;
+          description?: string;
+          effective?: string;
+        }[];
+      };
+      const items: FeedItem[] = [];
+      for (const a of data.items ?? []) {
+        if (!a['@id'] || !a.title) continue;
+        const publicadoEm = a.effective ? new Date(a.effective) : new Date();
+        if (isNaN(publicadoEm.getTime())) continue;
+        items.push({
+          titulo: a.title,
+          url: a['@id'],
+          conteudo: a.description ?? '',
+          publicadoEm,
+          fonteNome: 'Fundacentro',
+          tipoFonte: 'rss-dedicado',
+        });
+      }
+      return items;
+    },
+    { fallback: [] as FeedItem[] }
+  );
+}
+
 const fetchMecShow    = () => fetchSiteGenerico('https://www.mecshow.com.br', 'MecShow', 'mecshow.com.br');
 const fetchFenaf      = () => fetchSiteGenerico('https://abifa.org.br/site/fenaf/', 'FENAF', 'abifa.org.br');
 const fetchFesqua     = () => fetchSiteGenerico('https://fesqua.com.br', 'FESQUA', 'fesqua.com.br');
@@ -361,9 +401,10 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   }
 
   if (modo === 'todos' || modo === 'feeds' || modo === 'feeds-dedicados') {
-    const [dedicados, sindiferes, mecshow, fenaf, fesqua, metalurgia, abimaq, exposibram, expousipa] = await Promise.all([
+    const [dedicados, sindiferes, fundacentro, mecshow, fenaf, fesqua, metalurgia, abimaq, exposibram, expousipa] = await Promise.all([
       Promise.all(FEEDS_DEDICADO.map(f => fetchRSSFeed(f, 'rss-dedicado'))),
       fetchSindiferes(),
+      fetchFundacentro(),
       fetchMecShow(),
       fetchFenaf(),
       fetchFesqua(),
@@ -377,7 +418,7 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
       all.push(...dedicados[i]);
     }
     for (const [nome, lote] of [
-      ['SINDIFER-ES', sindiferes], ['MecShow', mecshow],
+      ['SINDIFER-ES', sindiferes], ['Fundacentro', fundacentro], ['MecShow', mecshow],
       ['FENAF', fenaf], ['FESQUA', fesqua], ['Feira Metalurgia', metalurgia],
       ['ABIMAQ', abimaq], ['EXPOSIBRAM', exposibram], ['Expo Usipa', expousipa],
     ] as [string, FeedItem[]][]) {

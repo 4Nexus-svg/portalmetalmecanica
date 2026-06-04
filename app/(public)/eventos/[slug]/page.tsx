@@ -78,6 +78,16 @@ async function FiltroPage({ slug }: { slug: string }) {
   );
 }
 
+function isValidImageUrl(url: string): boolean {
+  if (/[\s\\]/.test(url)) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 // ─── Página individual do evento ──────────────────────────────────────────────
 async function EventoPage({ evento }: { evento: Event }) {
   const tipo = evento.type as TipoEvento;
@@ -91,7 +101,7 @@ async function EventoPage({ evento }: { evento: Event }) {
       </Link>
 
       {/* Imagem */}
-      {evento.image_url ? (
+      {evento.image_url && isValidImageUrl(evento.image_url) ? (
         <div className="aspect-video rounded-xl overflow-hidden mb-8">
           <img src={evento.image_url} alt={evento.title} className="w-full h-full object-cover" />
         </div>
