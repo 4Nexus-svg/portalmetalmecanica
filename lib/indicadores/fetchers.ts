@@ -5,25 +5,30 @@ export type IndicadorFetch = {
   raw_data: Record<string, unknown>;
 };
 
-// AwesomeAPI: Dolar e Euro
+// open.er-api.com: Dolar e Euro (gratis, sem chave, sem rate limit)
 export async function fetchCambio(): Promise<IndicadorFetch[]> {
-  const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL', {
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`AwesomeAPI error: ${res.status}`);
-  const data = await res.json();
+  const [resUSD, resEUR] = await Promise.all([
+    fetch('https://open.er-api.com/v6/latest/USD', { cache: 'no-store' }),
+    fetch('https://open.er-api.com/v6/latest/EUR', { cache: 'no-store' }),
+  ]);
+  if (!resUSD.ok) throw new Error(`ExchangeRate USD error: ${resUSD.status}`);
+  if (!resEUR.ok) throw new Error(`ExchangeRate EUR error: ${resEUR.status}`);
+
+  const usd = await resUSD.json() as { rates: Record<string, number>; result: string };
+  const eur = await resEUR.json() as { rates: Record<string, number>; result: string };
+
   return [
     {
       slug: 'dolar',
-      value: parseFloat(data.USDBRL.bid),
-      variation: parseFloat(data.USDBRL.pctChange),
-      raw_data: data.USDBRL,
+      value: usd.rates['BRL'] ?? 0,
+      variation: null,
+      raw_data: usd as unknown as Record<string, unknown>,
     },
     {
       slug: 'euro',
-      value: parseFloat(data.EURBRL.bid),
-      variation: parseFloat(data.EURBRL.pctChange),
-      raw_data: data.EURBRL,
+      value: eur.rates['BRL'] ?? 0,
+      variation: null,
+      raw_data: eur as unknown as Record<string, unknown>,
     },
   ];
 }
