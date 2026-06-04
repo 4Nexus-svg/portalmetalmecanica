@@ -32,7 +32,8 @@ export async function fetchCambio(): Promise<IndicadorFetch[]> {
 export async function fetchBrapi(
   symbols: string[]
 ): Promise<Map<string, { price: number; changePct: number; raw: Record<string, unknown> }>> {
-  const query = symbols.join(',');
+  // cada symbol encodado individualmente, vírgula não encodada (formato brapi.dev)
+  const query = symbols.map(encodeURIComponent).join(',');
   const token = process.env.BRAPI_TOKEN;
   const url = `https://brapi.dev/api/quote/${query}${token ? `?token=${token}` : ''}`;
   const res = await fetch(url, { cache: 'no-store' });
