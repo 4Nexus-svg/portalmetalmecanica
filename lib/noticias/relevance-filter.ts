@@ -64,6 +64,7 @@ const PESOS: [string, number][] = [
   ['solar indústria', 2],
   ['aneel', 1],
   // Segurança do Trabalho
+  ['fundacentro', 4],
   ['nr-12', 4],
   ['nr-10', 3],
   ['nr-35', 2],
@@ -73,6 +74,13 @@ const PESOS: [string, number][] = [
   ['cipa', 2],
   ['pcmso', 2],
   ['ppra', 2],
+  ['higiene ocupacional', 3],
+  ['saúde ocupacional', 3],
+  ['medicina do trabalho', 2],
+  ['doença ocupacional', 2],
+  ['risco ocupacional', 2],
+  ['ergonomia', 2],
+  ['sesmt', 2],
   // Petróleo & Gás
   ['petrobras', 4],
   ['petróleo gás brasil', 3],
