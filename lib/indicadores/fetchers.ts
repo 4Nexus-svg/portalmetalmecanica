@@ -78,7 +78,7 @@ export async function fetchYahoo(
 // Banco Central OLINDA: Selic (serie 11)
 export async function fetchSelic(): Promise<IndicadorFetch> {
   const res = await fetch(
-    'https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados/ultimos/1?formato=json',
+    'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json',
     { cache: 'no-store' }
   );
   if (!res.ok) throw new Error(`BCB error: ${res.status}`);
