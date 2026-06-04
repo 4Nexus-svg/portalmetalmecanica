@@ -33,9 +33,9 @@ export async function fetchBrapi(
   symbols: string[]
 ): Promise<Map<string, { price: number; changePct: number; raw: Record<string, unknown> }>> {
   const query = symbols.join(',');
-  const res = await fetch(`https://brapi.dev/api/quote/${encodeURIComponent(query)}`, {
-    cache: 'no-store',
-  });
+  const token = process.env.BRAPI_TOKEN;
+  const url = `https://brapi.dev/api/quote/${query}${token ? `?token=${token}` : ''}`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`brapi.dev error: ${res.status}`);
   const data = await res.json();
   const map = new Map<string, { price: number; changePct: number; raw: Record<string, unknown> }>();
