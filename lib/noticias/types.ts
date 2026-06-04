@@ -1,4 +1,4 @@
-export type TipoFonte = 'api' | 'rss-geral' | 'rss-dedicado';
+export type TipoFonte = 'api' | 'rss-geral' | 'rss-dedicado' | 'historico';
 
 export type FeedItem = {
   titulo: string;

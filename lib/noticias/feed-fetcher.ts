@@ -159,13 +159,16 @@ async function fetchSiteGenerico(url: string, nome: string, dominioBase: string)
 async function fetchFundacentro(): Promise<FeedItem[]> {
   return safeRun(
     async () => {
-      const url = 'https://www.gov.br/fundacentro/++api++/pt-br/comunicacao/noticias/@search?portal_type=News+Item&sort_on=effective&sort_order=descending&b_size=20';
+      // Busca desde 01/01/2026 sem limite de data — artigos de segurança do trabalho
+      const url = 'https://www.gov.br/fundacentro/++api++/pt-br/comunicacao/noticias/@search'
+        + '?portal_type=News+Item&sort_on=effective&sort_order=descending&b_size=100'
+        + '&effective.query=2026-01-01&effective.range=min';
       const res = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)',
         },
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(15000),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as {
@@ -187,7 +190,7 @@ async function fetchFundacentro(): Promise<FeedItem[]> {
           conteudo: a.description ?? '',
           publicadoEm,
           fonteNome: 'Fundacentro',
-          tipoFonte: 'rss-dedicado',
+          tipoFonte: 'historico',
         });
       }
       return items;
@@ -365,6 +368,7 @@ async function fetchNewsAPI(): Promise<FeedItem[]> {
 
 // ─── Validação de data ────────────────────────────────────────────────────────
 function dentroDoLimite(item: FeedItem): boolean {
+  if (item.tipoFonte === 'historico') return true;
   const agora = Date.now();
   const diff = agora - item.publicadoEm.getTime();
   const limiteMs = item.tipoFonte === 'rss-dedicado' ? 24 * 3600_000 : 48 * 3600_000;

@@ -92,7 +92,7 @@ export async function GET(req: NextRequest) {
               tituloFinal: rewrite.titulo,
               resumoFinal: rewrite.resumo,
               conteudoFinal: rewrite.conteudo,
-              categoria: rewrite.categoria,
+              categoria: item.fonteNome === 'Fundacentro' ? 'Legislacao' : rewrite.categoria,
               regiao: rewrite.regiao,
               imagemFinal,
             });

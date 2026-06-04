@@ -26,6 +26,7 @@ export default async function HomePage() {
     .from("posts")
     .select("*")
     .not("published_at", "is", null)
+    .neq("category", "Legislacao")
     .order("published_at", { ascending: false })
     .limit(20) as { data: Post[] | null; error: unknown };
 
