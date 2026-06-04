@@ -41,6 +41,16 @@ export type Database = {
         Insert: { nome: string; slug: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean };
         Update: { nome?: string; slug?: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean };
       };
+      indicadores_snapshots: {
+        Row: { id: number; slug: string; value: number; variation: number | null; raw_data: Record<string, unknown> | null; captured_at: string };
+        Insert: { slug: string; value: number; variation?: number | null; raw_data?: Record<string, unknown> | null; captured_at?: string };
+        Update: { value?: number; variation?: number | null; raw_data?: Record<string, unknown> | null };
+      };
+      indicadores_config: {
+        Row: { slug: string; name: string; group_name: string; unit: string; decimals: number; frequency: string; source_label: string; source_url: string | null; description: string | null; active: boolean };
+        Insert: { slug: string; name: string; group_name: string; unit: string; decimals?: number; frequency: string; source_label: string; source_url?: string | null; description?: string | null; active?: boolean };
+        Update: { name?: string; group_name?: string; unit?: string; decimals?: number; frequency?: string; source_label?: string; source_url?: string | null; description?: string | null; active?: boolean };
+      };
     };
   };
 };
