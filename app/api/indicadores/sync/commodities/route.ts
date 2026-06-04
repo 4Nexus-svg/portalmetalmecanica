@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { fetchSelic, fetchBrapi } from '@/lib/indicadores/fetchers';
+import { fetchSelic, fetchYahoo } from '@/lib/indicadores/fetchers';
 
 function isAutorizado(req: NextRequest): boolean {
   return req.nextUrl.searchParams.get('secret') === process.env.CRON_SECRET;
@@ -29,32 +29,24 @@ export async function POST(req: NextRequest) {
     errors.push(`selic: ${e instanceof Error ? e.message : String(e)}`);
   }
 
-  // TIO=F=Minerio, HRC=F=Aco, ALI=F=Aluminio, HG=F=Cobre
-  try {
-    const brapiMap = await fetchBrapi(['TIO=F', 'HRC=F', 'ALI=F', 'HG=F']);
-    const slugMap: Record<string, string> = {
-      'TIO=F': 'minerio',
-      'HRC=F': 'aco',
-      'ALI=F': 'aluminio',
-      'HG=F': 'cobre',
-    };
-    for (const [symbol, slugName] of Object.entries(slugMap)) {
-      const result = brapiMap.get(symbol);
-      if (result) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from('indicadores_snapshots').insert({
-          slug: slugName,
-          value: result.price,
-          variation: result.changePct,
-          raw_data: result.raw,
-        });
-        updated.push(slugName);
-      } else {
-        errors.push(`${slugName}: ticker ${symbol} não retornado`);
-      }
+  // Commodities via Yahoo Finance (TIO=F=Minerio, HRC=F=Aco, ALI=F=Aluminio, HG=F=Cobre)
+  const commodities: Array<{ symbol: string; slug: string }> = [
+    { symbol: 'TIO=F', slug: 'minerio' },
+    { symbol: 'HRC=F', slug: 'aco' },
+    { symbol: 'ALI=F', slug: 'aluminio' },
+    { symbol: 'HG=F',  slug: 'cobre' },
+  ];
+  for (const { symbol, slug } of commodities) {
+    try {
+      const result = await fetchYahoo(symbol);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from('indicadores_snapshots').insert({
+        slug, value: result.price, variation: result.changePct, raw_data: result.raw,
+      });
+      updated.push(slug);
+    } catch (e) {
+      errors.push(`${slug}: ${e instanceof Error ? e.message : String(e)}`);
     }
-  } catch (e) {
-    errors.push(`brapi: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   return NextResponse.json({ ok: true, updated, errors });

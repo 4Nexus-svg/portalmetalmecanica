@@ -28,11 +28,10 @@ export async function fetchCambio(): Promise<IndicadorFetch[]> {
   ];
 }
 
-// brapi.dev: ^BVSP=Ibovespa, BZ=F=Brent, TIO=F=Minerio, HRC=F=Aco, ALI=F=Aluminio, HG=F=Cobre
+// brapi.dev: usado apenas para Ibovespa (^BVSP) — requer BRAPI_TOKEN
 export async function fetchBrapi(
   symbols: string[]
 ): Promise<Map<string, { price: number; changePct: number; raw: Record<string, unknown> }>> {
-  // cada symbol encodado individualmente, vírgula não encodada (formato brapi.dev)
   const query = symbols.map(encodeURIComponent).join(',');
   const token = process.env.BRAPI_TOKEN;
   const url = `https://brapi.dev/api/quote/${query}${token ? `?token=${token}` : ''}`;
@@ -48,6 +47,27 @@ export async function fetchBrapi(
     });
   }
   return map;
+}
+
+// Yahoo Finance v2: para commodities e futuros (BZ=F, TIO=F, HRC=F, ALI=F, HG=F) — sem autenticação
+export async function fetchYahoo(
+  symbol: string
+): Promise<{ price: number; changePct: number; raw: Record<string, unknown> }> {
+  const res = await fetch(
+    `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
+    {
+      cache: 'no-store',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)' },
+    }
+  );
+  if (!res.ok) throw new Error(`Yahoo Finance error: ${res.status} for ${symbol}`);
+  const data = await res.json() as { chart?: { result?: Array<{ meta?: Record<string, unknown> }> } };
+  const meta = data.chart?.result?.[0]?.meta;
+  if (!meta) throw new Error(`Yahoo Finance: sem dados para ${symbol}`);
+  const price = meta.regularMarketPrice as number;
+  const prevClose = (meta.chartPreviousClose ?? meta.previousClose) as number | undefined;
+  const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
+  return { price, changePct, raw: meta };
 }
 
 // Banco Central OLINDA: Selic (serie 11)
