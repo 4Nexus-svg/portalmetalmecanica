@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
   // Busca todos os históricos em paralelo
   const jobs: Array<{ name: string; fn: () => Promise<SnapshotRow[]> }> = [
     { name: 'cambio', fn: fetchCambioHistory },
-    { name: 'ibovespa', fn: () => fetchYahooHistory('%5EBVSP', 'ibovespa') },
+    { name: 'ibovespa', fn: () => fetchYahooHistory('^BVSP', 'ibovespa') },
     { name: 'petroleo', fn: () => fetchYahooHistory('BZ=F', 'petroleo') },
     { name: 'selic', fn: fetchSelicHistory },
     { name: 'minerio', fn: () => fetchYahooHistory('TIO=F', 'minerio') },
