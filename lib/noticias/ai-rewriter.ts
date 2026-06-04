@@ -22,6 +22,7 @@ export async function reescreverComIA(item: FeedItem): Promise<RewriteResult> {
       const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
 Analise a notícia abaixo e responda APENAS com JSON válido (sem markdown, sem explicações):
 {"titulo":"string (máx 90 chars, objetivo)","resumo":"string (máx 200 chars, 1 frase)","categoria":"Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia","regiao":"ES|MG|Brasil|Internacional"}
+Use Legislacao para notícias sobre NRs, normas, regulamentações, segurança do trabalho, EPI, CIPA, acidentes.
 
 NOTÍCIA:
 ${contexto}`;

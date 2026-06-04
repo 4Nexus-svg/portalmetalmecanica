@@ -12,5 +12,5 @@ export const NOTICIAS_FILTROS: Record<string, FiltroNoticias> = {
   economia:        { tipo: 'category', valor: 'Mercado',    label: 'Economia',              descricao: 'Mercado, investimentos e indicadores econômicos' },
   tecnologia:      { tipo: 'category', valor: 'Tecnologia', label: 'Tecnologia',            descricao: 'Inovação, automação e indústria 4.0' },
   sustentabilidade:{ tipo: 'category', valor: 'Energia',    label: 'Sustentabilidade',      descricao: 'Energia, meio ambiente e eficiência energética' },
-  seguranca:       { tipo: 'category', valor: 'Industria',  label: 'Segurança do Trabalho', descricao: 'NRs, EPIs e saúde do trabalhador industrial' },
+  seguranca:       { tipo: 'category', valor: 'Legislacao', label: 'Segurança do Trabalho', descricao: 'NRs, EPIs e saúde do trabalhador industrial' },
 };
