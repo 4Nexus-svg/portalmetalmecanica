@@ -65,8 +65,10 @@ const CANAIS = [
       { label: "Aço", href: "/indicadores/aco" },
       { label: "Alumínio", href: "/indicadores/aluminio" },
       { label: "Cobre", href: "/indicadores/cobre" },
-     { label: "Exportações ES & MG", href: "/indicadores/exportacoes" },
-      { label: "Produção Industrial ES & MG", href: "/indicadores/producao" },
+      { label: "Exportações ES", href: "/indicadores/exportacoes_es" },
+      { label: "Exportações MG", href: "/indicadores/exportacoes_mg" },
+      { label: "Produção Industrial ES", href: "/indicadores/producao_es" },
+      { label: "Produção Industrial MG", href: "/indicadores/producao_mg" },
       
     ],
   },
