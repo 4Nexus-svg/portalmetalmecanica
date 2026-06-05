@@ -193,15 +193,16 @@ if (pathname.startsWith("/painel")) {
 
 ## Critérios de Aceite (Fase 0)
 
-- [ ] Migration `009` aplicada; `profiles.role` aceita os 5 valores.
-- [ ] `tsc --noEmit` sem erros.
-- [ ] Usuário não logado em `/painel` → redirecionado ao login.
-- [ ] Usuário `user` logado em `/painel` → redirecionado a `/`.
-- [ ] Admin vê as 11 seções na sidebar; Comercial vê 4; Editor vê 7; Colunista vê 2.
-- [ ] Comercial digitando `/painel/usuarios` na URL → redirecionado ao dashboard.
-- [ ] Todas as seções abrem com o stub "Em construção".
-- [ ] Header mostra nome+papel; "Sair" encerra sessão; "Ver site" leva à home.
-- [ ] Build de produção sem erros.
+- [x] Migration `009` aplicada; `profiles.role` aceita os 5 valores. *(verificado no banco: constraint lista admin/editor/comercial/colunista/user)*
+- [x] `tsc --noEmit` sem erros.
+- [x] Build de produção sem erros. *(11 rotas `/painel*` geradas)*
+- [x] Guards de código implementados (middleware `proxy.ts` + `layout.tsx`/`_stub` com `podeAcessar`); lógica de permissões pura e type-checked: admin 11, editor 7, comercial 4, colunista 2.
+- [ ] *(verificação ao vivo — pendente de contas de teste)* Usuário não logado em `/painel` → redirecionado ao login.
+- [ ] *(ao vivo)* Usuário `user` logado em `/painel` → redirecionado a `/`.
+- [ ] *(ao vivo)* Admin vê 11 seções; Comercial 4; Editor 7; Colunista 2 na sidebar.
+- [ ] *(ao vivo)* Comercial digitando `/painel/usuarios` na URL → redirecionado ao dashboard.
+- [ ] *(ao vivo)* Todas as seções abrem com o stub "Em construção".
+- [ ] *(ao vivo)* Header mostra nome+papel; "Sair" encerra sessão; "Ver site" leva à home.
 
 ---
 
