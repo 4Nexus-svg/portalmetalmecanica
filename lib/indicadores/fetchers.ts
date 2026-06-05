@@ -169,7 +169,10 @@ export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
     const res = await fetch(url, { cache: 'no-store', headers: { 'User-Agent': 'PortalMetalmecanica/1.0' } });
     if (!res.ok) continue;
     const parsed = await res.json() as Array<Record<string, string>>;
-    const hasData = parsed.slice(1).some(r => r['V'] && r['V'] !== '..' && r['V'] !== '-');
+    const hasData = parsed.slice(1).some(r => {
+      const v = r['V'];
+      return v && v !== '..' && v !== '...' && v !== '-' && !isNaN(parseFloat(v));
+    });
     if (hasData) { rows = parsed; break; }
   }
 
@@ -183,7 +186,7 @@ export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
     const varCode = row['D2C'];
     const value = row['V'];
     const period = row['D3C'];
-    if (!stateId || !value || value === '..' || value === '-') continue;
+    if (!stateId || !value || value === '..' || value === '...' || value === '-') continue;
 
     if (!byState[stateId]) byState[stateId] = { yoy: null, index: null, period };
     const num = parseFloat(value);
