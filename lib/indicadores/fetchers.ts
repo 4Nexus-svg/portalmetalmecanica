@@ -154,24 +154,27 @@ export async function fetchExportacoesRegional(): Promise<IndicadorFetch[]> {
   ];
 }
 
-// IBGE SIDRA: PIM-PF Regional, tabela 8888, variavel 11601 (variação M/M-12 = YoY)
-// c544/129314 = "1 Indústria geral" (total), ES (N3[32]) e MG (N3[31]) separados
+// IBGE SIDRA: PIM-PF Regional, tabela 8888
+// var 11602 = variação M/M-12 (YoY %), var 12606 = índice base 2022=100
+// c544/129314 = "1 Indústria geral", ES (N3[32]) e MG (N3[31]) separados
 export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
   const now = new Date();
-  // IBGE publica com ~45 dias de atraso
-  const ref = new Date(now.getFullYear(), now.getMonth() - 2, 1);
   const toPeriod = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-  // var 11602 = variação M/M-12 (YoY %), var 12606 = índice base 2022=100
-  const url = `https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11602,12606/p/${toPeriod(ref)}/c544/129314`;
-  const res = await fetch(url, {
-    cache: 'no-store',
-    headers: { 'User-Agent': 'PortalMetalmecanica/1.0' },
-  });
-  if (!res.ok) throw new Error(`IBGE PIM error: ${res.status}`);
+  // Tenta de 2 a 4 meses atrás até encontrar período com dados publicados
+  let rows: Array<Record<string, string>> = [];
+  for (let lag = 2; lag <= 4; lag++) {
+    const ref = new Date(now.getFullYear(), now.getMonth() - lag, 1);
+    const url = `https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11602,12606/p/${toPeriod(ref)}/c544/129314`;
+    const res = await fetch(url, { cache: 'no-store', headers: { 'User-Agent': 'PortalMetalmecanica/1.0' } });
+    if (!res.ok) continue;
+    const parsed = await res.json() as Array<Record<string, string>>;
+    const hasData = parsed.slice(1).some(r => r['V'] && r['V'] !== '..' && r['V'] !== '-');
+    if (hasData) { rows = parsed; break; }
+  }
 
-  const rows = await res.json() as Array<Record<string, string>>;
-  const data = rows.slice(1); // skip header row
+  if (rows.length === 0) return [];
+  const data = rows.slice(1); // descarta linha de cabeçalho
 
   const byState: Record<string, { yoy: number | null; index: number | null; period: string }> = {};
 
