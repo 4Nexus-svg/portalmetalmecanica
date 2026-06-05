@@ -198,14 +198,15 @@ Renderização condicional por papel:
 
 ## Critérios de Aceite (Fase 2)
 
-- [ ] Migrations `012`, `013`, `014` aplicadas; tabelas `articles`, `companies`, `jobs` existem com RLS.
-- [ ] `tsc --noEmit` sem erros; build de produção sem erros.
-- [ ] **Eventos:** admin cria/edita/exclui um evento manual; ele aparece em `/eventos`; eventos automáticos seguem aparecendo e marcados como "Auto" no painel.
-- [ ] **Colunistas (admin/editor):** cria um colunista (com vínculo a um usuário) e um artigo; o artigo publicado aparece em `/artigos/[slug]` e na página `/colunistas/[slug]`.
-- [ ] **Artigos (colunista):** um usuário `colunista` vê só os próprios artigos, cria/edita/publica um, e **não** consegue ver/editar artigos de outro colunista.
-- [ ] **Guia:** admin/editor cadastra empresa; ela aparece em `/guia` e o filtro por categoria funciona.
-- [ ] **Vagas:** admin/editor cadastra vaga; aparece em `/vagas` e o detalhe `/vagas/[id]` mostra descrição e formas de contato; vaga expirada/inativa não aparece.
-- [ ] Uploads (imagem de evento, foto de colunista, capa de artigo, logo de empresa) gravam no bucket `painel`.
+- [x] Migrations `012`, `013`, `014` aplicadas; tabelas `articles`, `companies`, `jobs` existem com RLS. *(aplicadas via MCP; `to_regclass` confirma as 3)*
+- [x] `tsc --noEmit` sem erros; build de produção sem erros. *(39 páginas geradas; rotas `/painel/*` e públicas `/artigos`, `/colunistas/[slug]`, `/guia`, `/vagas`, `/vagas/[id]`)*
+- [x] Caminhos de dados públicos validados por smoke test (insert + query idêntica retorna artigo publicado, empresa ativa e vaga vigente). *(registros de teste removidos)*
+- [ ] *(verificação manual no navegador)* **Eventos:** criar/editar/excluir evento manual; aparece em `/eventos`; automáticos marcados "Auto".
+- [ ] *(manual)* **Colunistas (admin/editor):** criar colunista + artigo; publicado aparece em `/artigos/[slug]` e `/colunistas/[slug]`.
+- [ ] *(manual)* **Artigos (colunista):** `colunista` vê só os próprios e não acessa os de outro.
+- [ ] *(manual)* **Guia:** cadastrar empresa; aparece em `/guia`; filtro por categoria funciona.
+- [ ] *(manual)* **Vagas:** cadastrar vaga; aparece em `/vagas`; `/vagas/[id]` mostra contato; expirada/inativa some.
+- [ ] *(manual)* Uploads gravam no bucket `painel`.
 
 ---
 
