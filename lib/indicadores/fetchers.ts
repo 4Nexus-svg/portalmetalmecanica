@@ -91,8 +91,8 @@ export async function fetchSelic(): Promise<IndicadorFetch> {
   };
 }
 
-// MDIC Comex Stat: Exportacoes ES (32) e MG (31) separadas, com YoY
-// Retorna exportacoes_es e exportacoes_mg em US$ FOB milhoes
+// MDIC Comex Stat: Exportacoes ES e MG separadas, com variacao YoY
+// Usa endpoint /general com flow=export, filtra por nome do estado no resultado
 export async function fetchExportacoesRegional(): Promise<IndicadorFetch[]> {
   const now = new Date();
   // MDIC publica com ~2 meses de atraso
@@ -102,24 +102,23 @@ export async function fetchExportacoesRegional(): Promise<IndicadorFetch[]> {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
   const fetchComex = async (period: string): Promise<Record<string, number>> => {
-    const res = await fetch('https://api-comexstat.mdic.gov.br/cities', {
+    const res = await fetch('https://api-comexstat.mdic.gov.br/general', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        flow: 'exp',
+        flow: 'export',
         monthDetail: false,
         period: { from: period, to: period },
-        filters: [{ filter: 'state', values: ['32', '31'] }],
         details: ['state'],
         metrics: ['metricFOB'],
       }),
       cache: 'no-store',
     });
     if (!res.ok) throw new Error(`MDIC error: ${res.status}`);
-    const data = await res.json() as { data?: Array<{ state: string; metricFOB?: number }> };
+    const data = await res.json() as { data?: { list?: Array<{ state: string; metricFOB?: string }> } };
     const map: Record<string, number> = {};
-    for (const row of data.data ?? []) {
-      map[row.state] = row.metricFOB ?? 0;
+    for (const row of data.data?.list ?? []) {
+      map[row.state] = parseInt(row.metricFOB ?? '0', 10);
     }
     return map;
   };
@@ -129,21 +128,28 @@ export async function fetchExportacoesRegional(): Promise<IndicadorFetch[]> {
     fetchComex(fmtPeriod(prevYear)),
   ]);
 
-  const toMi = (v: number) => Math.round((v / 1_000_000) * 10) / 10;
-  const yoy = (cur: number, prev: number) => prev > 0 ? ((cur - prev) / prev) * 100 : null;
+  const toMi = (v: number) => Math.round(v / 1_000_000);
+  const yoy = (cur: number, prev: number): number | null =>
+    prev > 0 ? Math.round(((cur - prev) / prev) * 1000) / 10 : null;
+
+  const esC = current['Espírito Santo'] ?? 0;
+  const esP = lastYear['Espírito Santo'] ?? 0;
+  const mgC = current['Minas Gerais'] ?? 0;
+  const mgP = lastYear['Minas Gerais'] ?? 0;
+  const period = fmtPeriod(ref);
 
   return [
     {
       slug: 'exportacoes_es',
-      value: toMi(current['ES'] ?? current['32'] ?? 0),
-      variation: yoy(current['ES'] ?? current['32'] ?? 0, lastYear['ES'] ?? lastYear['32'] ?? 0),
-      raw_data: { state: 'ES', period: fmtPeriod(ref), current, lastYear } as unknown as Record<string, unknown>,
+      value: toMi(esC),
+      variation: yoy(esC, esP),
+      raw_data: { state: 'ES', period, fob_usd: esC, fob_usd_prev_year: esP } as unknown as Record<string, unknown>,
     },
     {
       slug: 'exportacoes_mg',
-      value: toMi(current['MG'] ?? current['31'] ?? 0),
-      variation: yoy(current['MG'] ?? current['31'] ?? 0, lastYear['MG'] ?? lastYear['31'] ?? 0),
-      raw_data: { state: 'MG', period: fmtPeriod(ref), current, lastYear } as unknown as Record<string, unknown>,
+      value: toMi(mgC),
+      variation: yoy(mgC, mgP),
+      raw_data: { state: 'MG', period, fob_usd: mgC, fob_usd_prev_year: mgP } as unknown as Record<string, unknown>,
     },
   ];
 }
