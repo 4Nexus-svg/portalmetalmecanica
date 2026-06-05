@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ColunistasCarrossel from "@/components/ui/ColunistasCarrossel";
 import { BannerSlot } from "@/components/ui/BannerSlot";
+import { EmpresasDestaque } from "@/components/ui/EmpresasDestaque";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
@@ -114,6 +115,8 @@ export default async function HomePage() {
     <ColunistasCarrossel colunistas={COLUNISTAS} />
 
     <div className="max-w-7xl mx-auto px-4 pb-8">
+
+      <EmpresasDestaque className="mt-8" />
 
       {/* CONTEÚDO PRINCIPAL + SIDEBAR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">

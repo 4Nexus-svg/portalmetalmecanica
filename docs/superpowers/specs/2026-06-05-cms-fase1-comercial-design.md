@@ -158,13 +158,14 @@ Adiciona `rejected` ao conjunto de status usados pela moderação. Não há cons
 
 ## Critérios de Aceite (Fase 1)
 
-- [ ] Migrations `010` e `011` aplicadas; tabela `featured_companies` e bucket `painel` existem com as policies.
-- [ ] `tsc --noEmit` sem erros; build de produção sem erros.
-- [ ] **Publicidade:** comercial cria um banner com imagem (upload), posição e datas; ele aparece no site no slot correto e some quando expira; editar e excluir funcionam.
-- [ ] **Classificados:** comercial vê a lista com filtro por status; aprova um pendente (vira `active`), rejeita outro (vira `rejected`), cria um manual e remove um.
-- [ ] **Empresas em Destaque:** comercial cadastra uma empresa com logo; ela aparece no bloco público da home; ao desativar ou expirar, some; editar/excluir funcionam.
-- [ ] Upload de imagem grava no bucket `painel` e retorna URL pública utilizável.
-- [ ] Um usuário `editor` (sem acesso comercial) é barrado das 3 seções (continua valendo da Fase 0).
+- [x] Migrations `010` e `011` aplicadas; tabela `featured_companies` e bucket `painel` existem com as policies. *(aplicadas via MCP; verificado `to_regclass` + bucket)*
+- [x] `tsc --noEmit` sem erros; build de produção sem erros. *(rotas `/painel/*` geradas)*
+- [x] Caminho de dados da vitrine pública validado por smoke test (insert + query idêntica à do componente retorna o registro). *(registro de teste removido depois)*
+- [ ] *(verificação manual no navegador)* **Publicidade:** criar banner com upload, posição e datas; aparece no slot do site e some ao expirar; editar/excluir.
+- [ ] *(manual)* **Classificados:** lista com filtro por status; aprovar (`active`), rejeitar (`rejected`), criar manual, remover.
+- [ ] *(manual)* **Empresas em Destaque:** cadastrar com logo; aparece na home; some ao desativar/expirar; editar/excluir.
+- [ ] *(manual)* Upload grava no bucket `painel` e retorna URL pública utilizável.
+- [ ] *(manual)* `editor` é barrado das 3 seções (herdado da Fase 0).
 
 ---
 

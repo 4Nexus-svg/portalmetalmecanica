@@ -7,13 +7,14 @@ export interface Coluna<T> {
 export default function DataTable<T extends { id: string | number }>({
   colunas,
   dados,
+  acoes,
   vazio = "Nenhum registro.",
 }: {
   colunas: Coluna<T>[];
   dados: T[];
+  acoes?: (linha: T) => React.ReactNode;
   vazio?: string;
 }) {
-  // Versão completa (ordenação, paginação, ações) na Fase 1.
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
       <table className="w-full text-sm">
@@ -22,6 +23,7 @@ export default function DataTable<T extends { id: string | number }>({
             {colunas.map((c) => (
               <th key={String(c.chave)} className="text-left px-6 py-3">{c.titulo}</th>
             ))}
+            {acoes && <th className="px-6 py-3 text-right">Ações</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -32,6 +34,7 @@ export default function DataTable<T extends { id: string | number }>({
                   {c.render ? c.render(linha) : String((linha as Record<string, unknown>)[String(c.chave)] ?? "—")}
                 </td>
               ))}
+              {acoes && <td className="px-6 py-4 text-right whitespace-nowrap">{acoes(linha)}</td>}
             </tr>
           ))}
         </tbody>
