@@ -7,14 +7,16 @@ const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-oss-120b:fr
 function deveUsarFallback(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (
-    msg.includes('429') ||       // quota excedida
-    msg.includes('503') ||       // serviço indisponível
+    msg.includes('429') ||        // quota excedida
+    msg.includes('503') ||        // serviço indisponível
     msg.includes('quota') ||
     msg.includes('rate limit') ||
     msg.includes('Too Many') ||
     msg.includes('Service Unavailable') ||
     msg.includes('not found') ||  // modelo descontinuado
-    msg.includes('404')
+    msg.includes('404') ||
+    msg.includes('não configurada') || // chave ausente → tenta próximo
+    msg.includes('not configured')
   );
 }
 
