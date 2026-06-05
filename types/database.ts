@@ -71,6 +71,16 @@ export type Database = {
         Insert: { title: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
         Update: { title?: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
       };
+      site_settings: {
+        Row: { key: string; value: string | null };
+        Insert: { key: string; value?: string | null };
+        Update: { value?: string | null };
+      };
+      home_blocks: {
+        Row: { id: number; key: string; label: string; coluna: "full" | "main" | "sidebar"; ordem: number; ativo: boolean };
+        Insert: { key: string; label: string; coluna: "full" | "main" | "sidebar"; ordem?: number; ativo?: boolean };
+        Update: { label?: string; coluna?: "full" | "main" | "sidebar"; ordem?: number; ativo?: boolean };
+      };
     };
   };
 };
