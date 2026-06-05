@@ -6,14 +6,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const url = 'https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11602,12606/p/202603/c544/129314';
-    const res = await fetch(url, {
-      cache: 'no-store',
-      headers: { 'User-Agent': 'PortalMetalmecanica/1.0' },
-    });
-    const status = res.status;
-    const text = await res.text();
-    return NextResponse.json({ status, body: text.substring(0, 500) });
+    // Simula exatamente o que o fetcher faz
+    const { fetchProducaoRegional } = await import('@/lib/indicadores/fetchers');
+    const result = await fetchProducaoRegional();
+    return NextResponse.json({ result, count: result.length });
   } catch (e) {
     return NextResponse.json({ error: String(e) });
   }
