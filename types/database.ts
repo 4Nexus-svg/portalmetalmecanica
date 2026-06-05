@@ -2,9 +2,9 @@ export type Database = {
   public: {
     Tables: {
       profiles: {
-        Row: { id: string; email: string | null; name: string | null; cnpj: string | null; role: "admin" | "user"; created_at: string };
-        Insert: { id: string; email?: string | null; name?: string | null; cnpj?: string | null; role?: "admin" | "user" };
-        Update: { email?: string | null; name?: string | null; cnpj?: string | null; role?: "admin" | "user" };
+        Row: { id: string; email: string | null; name: string | null; cnpj: string | null; role: "admin" | "editor" | "comercial" | "colunista" | "user"; created_at: string };
+        Insert: { id: string; email?: string | null; name?: string | null; cnpj?: string | null; role?: "admin" | "editor" | "comercial" | "colunista" | "user" };
+        Update: { email?: string | null; name?: string | null; cnpj?: string | null; role?: "admin" | "editor" | "comercial" | "colunista" | "user" };
       };
       posts: {
         Row: { id: number; slug: string; title: string; content: string | null; excerpt: string | null; featured_image: string | null; category: string | null; region: string | null; author_id: string | null; published_at: string | null; is_exclusive: boolean; created_at: string; fonte_url: string | null; fonte_nome: string | null; is_auto: boolean };
@@ -37,9 +37,9 @@ export type Database = {
         Update: { title?: string; description?: string | null; type?: 'feira' | 'congresso' | 'seminario' | 'workshop' | 'treinamento'; date_start?: string; date_end?: string | null; city?: string | null; state?: string | null; organizer?: string | null; image_url?: string | null };
       };
       columnists: {
-        Row: { id: number; nome: string; slug: string; cargo: string | null; especialidade: string | null; bio: string | null; iniciais: string | null; cor: string | null; foto_url: string | null; ativo: boolean; created_at: string };
-        Insert: { nome: string; slug: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean };
-        Update: { nome?: string; slug?: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean };
+        Row: { id: number; nome: string; slug: string; cargo: string | null; especialidade: string | null; bio: string | null; iniciais: string | null; cor: string | null; foto_url: string | null; ativo: boolean; profile_id: string | null; created_at: string };
+        Insert: { nome: string; slug: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean; profile_id?: string | null };
+        Update: { nome?: string; slug?: string; cargo?: string | null; especialidade?: string | null; bio?: string | null; iniciais?: string | null; cor?: string | null; foto_url?: string | null; ativo?: boolean; profile_id?: string | null };
       };
       indicadores_snapshots: {
         Row: { id: number; slug: string; value: number; variation: number | null; raw_data: Record<string, unknown> | null; captured_at: string };
