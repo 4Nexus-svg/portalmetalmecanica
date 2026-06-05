@@ -162,8 +162,8 @@ export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
   const ref = new Date(now.getFullYear(), now.getMonth() - 2, 1);
   const toPeriod = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-  // var 11601 = variação M/M-12 (YoY %), var 12607 = índice base 2022=100
-  const url = `https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11601,12607/p/${toPeriod(ref)}/c544/129314`;
+  // var 11602 = variação M/M-12 (YoY %), var 12606 = índice base 2022=100
+  const url = `https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11602,12606/p/${toPeriod(ref)}/c544/129314`;
   const res = await fetch(url, {
     cache: 'no-store',
     headers: { 'User-Agent': 'PortalMetalmecanica/1.0' },
@@ -186,8 +186,8 @@ export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
     const num = parseFloat(value);
     if (isNaN(num)) continue;
 
-    if (varCode === '11601') byState[stateId].yoy = Math.round(num * 10) / 10;
-    if (varCode === '12607') byState[stateId].index = Math.round(num * 10) / 10;
+    if (varCode === '11602') byState[stateId].yoy = Math.round(num * 10) / 10;
+    if (varCode === '12606') byState[stateId].index = Math.round(num * 10) / 10;
   }
 
   const results: IndicadorFetch[] = [];
