@@ -25,11 +25,11 @@ type HistoricoChartProps = {
   unit: string;
   decimals: number;
   positive: boolean;
+  periodoLabels?: Record<Periodo, string>;
 };
 
-const DIAS: Record<Periodo, number> = { '7d': 7, '30d': 30, '90d': 90, '1a': 365 };
 
-export function HistoricoChart({ data, unit, decimals, positive }: HistoricoChartProps) {
+export function HistoricoChart({ data, unit, decimals, positive, periodoLabels }: HistoricoChartProps) {
   const [periodo, setPeriodo] = useState<Periodo>('30d');
   const snapshots = data[periodo];
 
@@ -44,10 +44,9 @@ export function HistoricoChart({ data, unit, decimals, positive }: HistoricoChar
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">
-          {snapshots.length} {snapshots.length === 1 ? 'ponto' : 'pontos'} nos últimos{' '}
-          {DIAS[periodo]} dias
+          {snapshots.length} {snapshots.length === 1 ? 'registro' : 'registros'}
         </span>
-        <PeriodoSelector value={periodo} onChange={setPeriodo} />
+        <PeriodoSelector value={periodo} onChange={setPeriodo} labels={periodoLabels} />
       </div>
 
       {snapshots.length < 2 ? (

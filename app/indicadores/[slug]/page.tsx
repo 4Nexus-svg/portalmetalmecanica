@@ -27,14 +27,20 @@ export default async function IndicadorDetalhe({ params }: Props) {
 
   const { config, latest } = result;
 
-  const [h7, h30, h90, h365] = await Promise.all([
-    getHistorico(slug, 7),
-    getHistorico(slug, 30),
-    getHistorico(slug, 90),
-    getHistorico(slug, 365),
-  ]);
+  // Indicadores mensais usam janelas maiores (3m, 6m, 1a, 2a)
+  const isMonthly = config.frequency === 'mensal';
+  const windows = isMonthly
+    ? [90, 180, 365, 730]
+    : [7, 30, 90, 365];
+
+  const [h7, h30, h90, h365] = await Promise.all(
+    windows.map(dias => getHistorico(slug, dias))
+  );
 
   const historicoData = { '7d': h7, '30d': h30, '90d': h90, '1a': h365 };
+  const periodoLabels = isMonthly
+    ? { '7d': '3 meses', '30d': '6 meses', '90d': '1 ano', '1a': '2 anos' }
+    : { '7d': '7 dias', '30d': '30 dias', '90d': '90 dias', '1a': '1 ano' };
   const positive = (latest?.variation ?? 0) >= 0;
 
   const valorFormatado = latest
@@ -126,6 +132,7 @@ export default async function IndicadorDetalhe({ params }: Props) {
               unit={config.unit}
               decimals={config.decimals}
               positive={positive}
+              periodoLabels={periodoLabels}
             />
           </div>
 
