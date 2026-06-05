@@ -51,6 +51,11 @@ export type Database = {
         Insert: { slug: string; name: string; group_name: string; unit: string; decimals?: number; frequency: string; source_label: string; source_url?: string | null; description?: string | null; active?: boolean };
         Update: { name?: string; group_name?: string; unit?: string; decimals?: number; frequency?: string; source_label?: string; source_url?: string | null; description?: string | null; active?: boolean };
       };
+      featured_companies: {
+        Row: { id: number; name: string; logo_url: string | null; link: string | null; description: string | null; ordem: number; ativo: boolean; start_date: string | null; end_date: string | null; created_at: string };
+        Insert: { name: string; logo_url?: string | null; link?: string | null; description?: string | null; ordem?: number; ativo?: boolean; start_date?: string | null; end_date?: string | null };
+        Update: { name?: string; logo_url?: string | null; link?: string | null; description?: string | null; ordem?: number; ativo?: boolean; start_date?: string | null; end_date?: string | null };
+      };
     };
   };
 };
