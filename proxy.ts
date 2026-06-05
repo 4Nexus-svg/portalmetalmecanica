@@ -35,6 +35,15 @@ export async function proxy(request: NextRequest) {
     if (profile?.role !== "admin") return NextResponse.redirect(new URL("/", request.url));
   }
 
+  if (pathname.startsWith("/painel")) {
+    if (!user) return NextResponse.redirect(new URL("/login?next=" + pathname, request.url));
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    const rolesPainel = ["admin", "editor", "comercial", "colunista"];
+    if (!rolesPainel.includes(profile?.role ?? "")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   if (pathname.startsWith("/assinante")) {
     const now = new Date().toISOString();
     const { data: subscription } = await supabase
