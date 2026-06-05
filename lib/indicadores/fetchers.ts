@@ -154,58 +154,52 @@ export async function fetchExportacoesRegional(): Promise<IndicadorFetch[]> {
   ];
 }
 
-// IBGE SIDRA: PIM-PF Regional, tabela 3653, variavel 3135 (indice base fixa)
-// ES (N3[32]) e MG (N3[31]) separados, com variacao interanual (YoY)
+// IBGE SIDRA: PIM-PF Regional, tabela 8888, variavel 11601 (variação M/M-12 = YoY)
+// c544/129314 = "1 Indústria geral" (total), ES (N3[32]) e MG (N3[31]) separados
 export async function fetchProducaoRegional(): Promise<IndicadorFetch[]> {
   const now = new Date();
   // IBGE publica com ~45 dias de atraso
   const ref = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-  const startRef = new Date(ref.getFullYear() - 1, ref.getMonth() - 1, 1);
   const toPeriod = (d: Date) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-  const url = `https://servicodados.ibge.gov.br/api/v3/agregados/3653/periodos/${toPeriod(startRef)}-${toPeriod(ref)}/variaveis/3135?localidades=N3[32,31]`;
-  const res = await fetch(url, { cache: 'no-store' });
+  // var 11601 = variação M/M-12 (YoY %), var 12607 = índice base 2022=100
+  const url = `https://apisidra.ibge.gov.br/values/t/8888/n3/32,31/v/11601,12607/p/${toPeriod(ref)}/c544/129314`;
+  const res = await fetch(url, {
+    cache: 'no-store',
+    headers: { 'User-Agent': 'PortalMetalmecanica/1.0' },
+  });
   if (!res.ok) throw new Error(`IBGE PIM error: ${res.status}`);
 
-  const data = await res.json() as Array<{
-    resultados?: Array<{
-      series?: Array<{
-        localidade: { id: string };
-        serie: Record<string, string>;
-      }>;
-    }>;
-  }>;
+  const rows = await res.json() as Array<Record<string, string>>;
+  const data = rows.slice(1); // skip header row
 
-  const results: IndicadorFetch[] = [];
+  const byState: Record<string, { yoy: number | null; index: number | null; period: string }> = {};
 
-  for (const varResult of data) {
-    for (const result of varResult.resultados ?? []) {
-      for (const series of result.series ?? []) {
-        const stateId = series.localidade.id;
-        const slug = stateId === '32' ? 'producao_es' : 'producao_mg';
-        const serie = series.serie;
+  for (const row of data) {
+    const stateId = row['D1C'];
+    const varCode = row['D2C'];
+    const value = row['V'];
+    const period = row['D3C'];
+    if (!stateId || !value || value === '..' || value === '-') continue;
 
-        const periods = Object.keys(serie).filter(k => serie[k] !== '...').sort();
-        if (periods.length === 0) continue;
+    if (!byState[stateId]) byState[stateId] = { yoy: null, index: null, period };
+    const num = parseFloat(value);
+    if (isNaN(num)) continue;
 
-        const latestPeriod = periods[periods.length - 1];
-        const latestValue = parseFloat(serie[latestPeriod]);
-        if (isNaN(latestValue)) continue;
-
-        // YoY: mesmo mes do ano anterior
-        const prevPeriod = `${parseInt(latestPeriod.substring(0, 4)) - 1}${latestPeriod.substring(4)}`;
-        const prevValue = serie[prevPeriod] ? parseFloat(serie[prevPeriod]) : null;
-        const yoy = prevValue && prevValue > 0 ? ((latestValue - prevValue) / prevValue) * 100 : null;
-
-        results.push({
-          slug,
-          value: Math.round(latestValue * 10) / 10,
-          variation: yoy !== null ? Math.round(yoy * 10) / 10 : null,
-          raw_data: { stateId, latestPeriod, latestValue, prevPeriod, prevValue } as unknown as Record<string, unknown>,
-        });
-      }
-    }
+    if (varCode === '11601') byState[stateId].yoy = Math.round(num * 10) / 10;
+    if (varCode === '12607') byState[stateId].index = Math.round(num * 10) / 10;
   }
 
+  const results: IndicadorFetch[] = [];
+  for (const [stateId, d] of Object.entries(byState)) {
+    const slug = stateId === '32' ? 'producao_es' : 'producao_mg';
+    if (d.index === null && d.yoy === null) continue;
+    results.push({
+      slug,
+      value: d.index ?? 0,
+      variation: d.yoy,
+      raw_data: { stateId, period: d.period, index: d.index, yoy: d.yoy } as unknown as Record<string, unknown>,
+    });
+  }
   return results;
 }
