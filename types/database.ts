@@ -56,6 +56,21 @@ export type Database = {
         Insert: { name: string; logo_url?: string | null; link?: string | null; description?: string | null; ordem?: number; ativo?: boolean; start_date?: string | null; end_date?: string | null };
         Update: { name?: string; logo_url?: string | null; link?: string | null; description?: string | null; ordem?: number; ativo?: boolean; start_date?: string | null; end_date?: string | null };
       };
+      articles: {
+        Row: { id: number; title: string; slug: string; content: string | null; excerpt: string | null; cover_url: string | null; columnist_id: number; published_at: string | null; created_at: string };
+        Insert: { title: string; slug: string; content?: string | null; excerpt?: string | null; cover_url?: string | null; columnist_id: number; published_at?: string | null };
+        Update: { title?: string; slug?: string; content?: string | null; excerpt?: string | null; cover_url?: string | null; columnist_id?: number; published_at?: string | null };
+      };
+      companies: {
+        Row: { id: number; name: string; category: string | null; city: string | null; state: string | null; phone: string | null; site: string | null; logo_url: string | null; description: string | null; ativo: boolean; created_at: string };
+        Insert: { name: string; category?: string | null; city?: string | null; state?: string | null; phone?: string | null; site?: string | null; logo_url?: string | null; description?: string | null; ativo?: boolean };
+        Update: { name?: string; category?: string | null; city?: string | null; state?: string | null; phone?: string | null; site?: string | null; logo_url?: string | null; description?: string | null; ativo?: boolean };
+      };
+      jobs: {
+        Row: { id: number; title: string; company: string | null; city: string | null; state: string | null; type: string | null; salary: string | null; description: string | null; link: string | null; contact_email: string | null; ativo: boolean; expires_at: string | null; created_at: string };
+        Insert: { title: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
+        Update: { title?: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
+      };
     };
   };
 };
