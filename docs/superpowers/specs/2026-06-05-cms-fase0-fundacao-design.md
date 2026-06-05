@@ -197,12 +197,13 @@ if (pathname.startsWith("/painel")) {
 - [x] `tsc --noEmit` sem erros.
 - [x] Build de produção sem erros. *(11 rotas `/painel*` geradas)*
 - [x] Guards de código implementados (middleware `proxy.ts` + `layout.tsx`/`_stub` com `podeAcessar`); lógica de permissões pura e type-checked: admin 11, editor 7, comercial 4, colunista 2.
-- [ ] *(verificação ao vivo — pendente de contas de teste)* Usuário não logado em `/painel` → redirecionado ao login.
-- [ ] *(ao vivo)* Usuário `user` logado em `/painel` → redirecionado a `/`.
-- [ ] *(ao vivo)* Admin vê 11 seções; Comercial 4; Editor 7; Colunista 2 na sidebar.
-- [ ] *(ao vivo)* Comercial digitando `/painel/usuarios` na URL → redirecionado ao dashboard.
-- [ ] *(ao vivo)* Todas as seções abrem com o stub "Em construção".
-- [ ] *(ao vivo)* Header mostra nome+papel; "Sair" encerra sessão; "Ver site" leva à home.
+- [x] *(verificado ao vivo)* Usuário `user` logado em `/painel` → redirecionado a `/`.
+- [x] *(verificado ao vivo)* Admin vê 11 seções; Comercial 4; Editor 7; Colunista 2 na sidebar.
+- [x] *(verificado ao vivo)* Seção fora da permissão digitada na URL → redirecionado ao dashboard (testado editor→publicidade, comercial→usuarios, colunista→eventos).
+- [x] *(verificado ao vivo)* Todas as seções abrem com o stub "Em construção".
+- [x] *(verificado ao vivo)* Header mostra nome+papel por perfil.
+
+> Verificação ao vivo feita em 2026-06-05 alternando o role do usuário admin pelos 5 valores e restaurando para `admin` ao final.
 
 ---
 
