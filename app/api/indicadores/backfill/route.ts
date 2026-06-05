@@ -74,41 +74,54 @@ async function fetchCambioHistory(): Promise<SnapshotRow[]> {
   return [...usd, ...eur];
 }
 
-// MDIC: histórico mensal de 12 meses para ES e MG
+// MDIC: histórico mensal de 2 anos em 2 requisições (range)
 async function fetchExportacoesHistory(): Promise<SnapshotRow[]> {
   const now = new Date();
+  const endRef = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+  const startRef = new Date(endRef.getFullYear() - 2, endRef.getMonth(), 1);
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+  const res = await fetch('https://api-comexstat.mdic.gov.br/general', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      flow: 'export',
+      monthDetail: true,
+      period: { from: fmt(startRef), to: fmt(endRef) },
+      details: ['state'],
+      metrics: ['metricFOB'],
+    }),
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`MDIC backfill: ${res.status}`);
+  const data = await res.json() as { data?: { list?: Array<{ state: string; year: string; monthNumber: string; metricFOB?: string }> } };
+
+  // Agrupa por estado+ano+mês
+  const byStatePeriod: Record<string, number> = {};
+  for (const r of data.data?.list ?? []) {
+    const key = `${r.state}_${r.year}_${String(r.monthNumber).padStart(2, '0')}`;
+    byStatePeriod[key] = parseInt(r.metricFOB ?? '0', 10);
+  }
+
   const rows: SnapshotRow[] = [];
+  const states = [{ name: 'Espírito Santo', slug: 'exportacoes_es' }, { name: 'Minas Gerais', slug: 'exportacoes_mg' }];
 
-  for (let lag = 2; lag <= 14; lag++) {
-    try {
-      const ref = new Date(now.getFullYear(), now.getMonth() - lag, 1);
-      const prevYear = new Date(ref.getFullYear() - 1, ref.getMonth(), 1);
-      const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  for (const { name, slug } of states) {
+    const keys = Object.keys(byStatePeriod).filter(k => k.startsWith(name + '_')).sort();
+    for (const key of keys) {
+      const parts = key.split('_');
+      const year = parseInt(parts[parts.length - 2]);
+      const month = parseInt(parts[parts.length - 1]) - 1;
+      const value = byStatePeriod[key];
+      if (value === 0) continue;
 
-      const fetchComex = async (period: string) => {
-        const res = await fetch('https://api-comexstat.mdic.gov.br/general', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ flow: 'export', monthDetail: false, period: { from: period, to: period }, details: ['state'], metrics: ['metricFOB'] }),
-          cache: 'no-store',
-        });
-        if (!res.ok) return {};
-        const data = await res.json() as { data?: { list?: Array<{ state: string; metricFOB?: string }> } };
-        const map: Record<string, number> = {};
-        for (const r of data.data?.list ?? []) map[r.state] = parseInt(r.metricFOB ?? '0', 10);
-        return map;
-      };
+      const prevKey = `${name}_${year - 1}_${String(month + 1).padStart(2, '0')}`;
+      const prevValue = byStatePeriod[prevKey] ?? 0;
+      const yoy = prevValue > 0 ? Math.round(((value - prevValue) / prevValue) * 1000) / 10 : null;
+      const captured_at = new Date(year, month + 1, 1, 12, 0, 0).toISOString();
 
-      const [cur, prev] = await Promise.all([fetchComex(fmt(ref)), fetchComex(fmt(prevYear))]);
-      const captured_at = new Date(ref.getFullYear(), ref.getMonth() + 1, 1, 12, 0, 0).toISOString();
-      const toMi = (v: number) => Math.round(v / 1_000_000);
-      const yoy = (c: number, p: number): number | null => p > 0 ? Math.round(((c - p) / p) * 1000) / 10 : null;
-
-      const esC = cur['Espírito Santo'] ?? 0;
-      const mgC = cur['Minas Gerais'] ?? 0;
-      if (esC > 0) rows.push({ slug: 'exportacoes_es', value: toMi(esC), variation: yoy(esC, prev['Espírito Santo'] ?? 0), captured_at, raw_data: { period: fmt(ref) } as Record<string, unknown> });
-      if (mgC > 0) rows.push({ slug: 'exportacoes_mg', value: toMi(mgC), variation: yoy(mgC, prev['Minas Gerais'] ?? 0), captured_at, raw_data: { period: fmt(ref) } as Record<string, unknown> });
-    } catch { continue; }
+      rows.push({ slug, value: Math.round(value / 1_000_000), variation: yoy, captured_at, raw_data: { state: name, year, month: month + 1 } as Record<string, unknown> });
+    }
   }
   return rows;
 }
