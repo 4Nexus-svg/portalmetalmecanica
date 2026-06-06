@@ -185,13 +185,13 @@ Adicionar: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`.
 
 ## Critérios de Aceite (Fase 3)
 
-- [ ] Migrations `015`, `016` aplicadas; `site_settings` e `home_blocks` existem com seeds e RLS.
-- [ ] `tsc --noEmit` sem erros; build de produção sem erros.
-- [ ] **Dashboard:** `/painel` mostra os cards de totais e os dois gráficos com dados reais.
-- [ ] **Configurações:** admin altera nome do site/contato/redes/preço; Footer reflete contato+redes; `/assinatura` reflete o preço.
-- [ ] **Usuários:** admin lista usuários, troca o papel de um usuário (persistido), e não consegue rebaixar a si mesmo; convite por e-mail dispara o fluxo de convite do Supabase.
-- [ ] **Home Builder:** admin reordena e desativa blocos por drag-and-drop e salva; a home pública reflete a nova ordem/visibilidade; desativar um bloco o remove da home.
-- [ ] A home pública continua renderizando corretamente (com fallback se `home_blocks` estiver indisponível).
+- [x] Migrations `015`, `016` aplicadas; `site_settings` e `home_blocks` existem com seeds e RLS. *(aplicadas via MCP; settings=7, blocks=11)*
+- [x] `tsc --noEmit` sem erros; build de produção sem erros. *(39 páginas geradas; `/painel/home`, `/painel/configuracoes`, `/painel/usuarios` e a home renderizam)*
+- [ ] *(verificação manual no navegador)* **Dashboard:** `/painel` mostra os 6 cards e os 2 gráficos com dados reais.
+- [ ] *(manual)* **Configurações:** admin altera nome/contato/redes/preço; Footer reflete contato+redes; `/assinatura` reflete o preço.
+- [ ] *(manual)* **Usuários:** admin troca papel (persistido), não rebaixa a si mesmo; convite por e-mail dispara o fluxo do Supabase.
+- [ ] *(manual)* **Home Builder:** admin reordena/desativa blocos por drag-and-drop e salva; a home reflete a nova ordem/visibilidade.
+- [ ] *(manual)* A home pública continua renderizando (com fallback se `home_blocks` indisponível).
 
 ---
 
