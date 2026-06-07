@@ -34,7 +34,7 @@ export default function Modal({
       onClick={onFechar}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {titulo && (
@@ -45,7 +45,7 @@ export default function Modal({
             </button>
           </div>
         )}
-        <div className="px-6 py-5">{children}</div>
+        <div className="px-6 py-5 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );
