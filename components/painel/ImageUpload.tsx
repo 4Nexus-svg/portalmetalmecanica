@@ -17,6 +17,7 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
+  const [arrastando, setArrastando] = useState(false);
   const [urlManual, setUrlManual] = useState("");
 
   async function uploadFile(file: File) {
@@ -32,26 +33,30 @@ export default function ImageUpload({
     onChange(data.publicUrl);
   }
 
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setArrastando(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setArrastando(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setArrastando(false);
+  }
+
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     await uploadFile(file);
     e.target.value = "";
-  }
-
-  async function abrirComFileSystemAPI() {
-    if (enviando) return;
-    try {
-      const tipos: FilePickerAcceptType[] = aceitaVideo
-        ? [{ description: "Imagem ou vídeo", accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"], "video/*": [".mp4", ".webm"] } }]
-        : [{ description: "Imagem", accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"] } }];
-
-      const [handle] = await (window as any).showOpenFilePicker({ types: tipos, multiple: false });
-      const file: File = await handle.getFile();
-      await uploadFile(file);
-    } catch (e: any) {
-      if (e?.name !== "AbortError") toast.error("Erro ao abrir arquivo");
-    }
   }
 
   function confirmarUrl() {
@@ -63,8 +68,6 @@ export default function ImageUpload({
     onChange(url);
     setUrlManual("");
   }
-
-  const temFileSystemAPI = typeof window !== "undefined" && "showOpenFilePicker" in window;
 
   return (
     <div className="mb-4">
@@ -87,39 +90,39 @@ export default function ImageUpload({
         </div>
       ) : (
         <div className="space-y-3">
-          {/* Opção 1a: File System Access API (Chrome moderno) */}
-          {temFileSystemAPI ? (
-            <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
-              <button
-                type="button"
-                disabled={enviando}
-                onClick={abrirComFileSystemAPI}
-                className="flex items-center gap-2 px-4 py-2 bg-[#1A2B4A] text-white text-sm rounded-lg hover:bg-[#0f1e35] disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Upload size={15} />
-                {enviando ? "Enviando..." : "Escolher arquivo"}
-              </button>
-            </div>
-          ) : (
-            /* Fallback: input nativo para browsers sem showOpenFilePicker */
-            <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
+
+          {/* Zona de drag & drop — sem dialog, arrasta do Explorer */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`w-full rounded-lg border-2 border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-colors
+              ${arrastando ? "border-[#C9A84C] bg-amber-50" : "border-gray-300 bg-gray-50"}
+              ${enviando ? "opacity-60" : ""}`}
+          >
+            <Upload size={24} className={arrastando ? "text-[#C9A84C]" : "text-gray-400"} />
+            <p className="text-sm font-medium text-gray-600">
+              {enviando ? "Enviando..." : arrastando ? "Solte aqui!" : "Arraste a imagem aqui"}
+            </p>
+            <p className="text-xs text-gray-400">Arraste um arquivo do Windows Explorer para cá</p>
+
+            {/* Input nativo como alternativa ao clique */}
+            <label className="mt-1 text-xs text-[#1A2B4A] underline cursor-pointer hover:text-[#C9A84C]">
+              ou clique aqui para escolher
               <input
                 type="file"
                 accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
                 onChange={handleFile}
                 disabled={enviando}
-                className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#1A2B4A] file:text-white file:cursor-pointer hover:file:bg-[#0f1e35] disabled:opacity-60"
+                className="hidden"
               />
-              {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
-            </div>
-          )}
+            </label>
+          </div>
 
           {/* Opção 2: colar URL */}
           <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
             <p className="text-xs text-gray-500 mb-2 font-medium flex items-center gap-1">
-              <Link size={12} /> Opção 2 — colar URL da imagem
+              <Link size={12} /> Ou cole a URL da imagem
             </p>
             <div className="flex gap-2">
               <input
@@ -139,6 +142,7 @@ export default function ImageUpload({
               </button>
             </div>
           </div>
+
         </div>
       )}
     </div>
