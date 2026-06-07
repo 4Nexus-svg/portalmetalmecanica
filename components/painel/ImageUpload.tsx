@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -39,15 +39,6 @@ export default function ImageUpload({
     <div className="mb-4">
       <p className="block text-sm font-medium text-gray-700 mb-1">{label}</p>
 
-      {/* Input escondido — acionado pelo botão abaixo */}
-      <input
-        ref={inputRef}
-        type="file"
-        accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
-        onChange={handleFile}
-        className="hidden"
-      />
-
       {valor ? (
         <div className="relative inline-block">
           {/\.(mp4|webm|ogg)(\?.*)?$/i.test(valor) ? (
@@ -64,16 +55,28 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={enviando}
-          onClick={() => inputRef.current?.click()}
-          className="w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C9A84C] hover:bg-amber-50 transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Upload size={20} className="text-gray-400" />
-          <span className="text-sm text-gray-500">{enviando ? "Enviando..." : "Clique para enviar"}</span>
-          <span className="text-xs text-gray-400">{aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}</span>
-        </button>
+        <>
+          <input
+            id={inputId}
+            type="file"
+            accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+            onChange={handleFile}
+            disabled={enviando}
+            className="sr-only"
+          />
+          <label
+            htmlFor={inputId}
+            className={`flex w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C9A84C] hover:bg-amber-50 transition-colors flex-col items-center justify-center gap-1 ${enviando ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+          >
+            <Upload size={20} className="text-gray-400" />
+            <span className="text-sm text-gray-500">
+              {enviando ? "Enviando..." : "Clique para enviar"}
+            </span>
+            <span className="text-xs text-gray-400">
+              {aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}
+            </span>
+          </label>
+        </>
       )}
     </div>
   );
