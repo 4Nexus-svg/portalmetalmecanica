@@ -23,9 +23,11 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user") {
   const supabase = await createServiceClient();
   const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
   if (error) throw new Error(error.message);
-  // Define o papel desejado no perfil criado pelo trigger
-  if (data?.user?.id && papel !== "user") {
-    await (supabase.from("profiles") as any).update({ role: papel }).eq("id", data.user.id);
+  // Upsert garante que o perfil existe com o papel correto,
+  // independente do timing do trigger on_auth_user_created
+  if (data?.user?.id) {
+    await (supabase.from("profiles") as any)
+      .upsert({ id: data.user.id, email, role: papel }, { onConflict: "id" });
   }
   revalidatePath("/painel/usuarios");
 }
