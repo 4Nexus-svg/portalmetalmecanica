@@ -16,12 +16,16 @@ export async function alterarPapel(userId: string, papel: PapelDB) {
   revalidatePath("/painel/usuarios");
 }
 
-export async function convidarUsuario(email: string) {
+export async function convidarUsuario(email: string, papel: PapelDB = "user") {
   const u = await getPainelUser();
   if (!u || u.role !== "admin") throw new Error("Não autorizado");
   if (!email) throw new Error("Informe um e-mail");
   const supabase = await createServiceClient();
-  const { error } = await supabase.auth.admin.inviteUserByEmail(email);
+  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
   if (error) throw new Error(error.message);
+  // Define o papel desejado no perfil criado pelo trigger
+  if (data?.user?.id && papel !== "user") {
+    await (supabase.from("profiles") as any).update({ role: papel }).eq("id", data.user.id);
+  }
   revalidatePath("/painel/usuarios");
 }

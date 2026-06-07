@@ -17,6 +17,7 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
   const router = useRouter();
   const [convite, setConvite] = useState(false);
   const [email, setEmail] = useState("");
+  const [papel, setPapel] = useState<PapelDB>("editor");
   const [enviando, setEnviando] = useState(false);
 
   async function trocar(userId: string, papel: PapelDB) {
@@ -32,10 +33,11 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
   async function convidar() {
     setEnviando(true);
     try {
-      await convidarUsuario(email);
+      await convidarUsuario(email, papel);
       toast.success("Convite enviado");
       setConvite(false);
       setEmail("");
+      setPapel("editor");
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao convidar");
@@ -71,6 +73,11 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
       <Modal aberto={convite} titulo="Convidar usuário" onFechar={() => setConvite(false)}>
         <FormField label="E-mail">
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="pessoa@empresa.com" />
+        </FormField>
+        <FormField label="Papel">
+          <Select value={papel} onChange={(e) => setPapel(e.target.value as PapelDB)}>
+            {PAPEIS.filter(p => p !== "user").map((r) => <option key={r} value={r}>{r}</option>)}
+          </Select>
         </FormField>
         <button onClick={convidar} disabled={enviando} className="w-full bg-[#1A2B4A] text-white font-semibold py-2.5 rounded-lg hover:bg-[#0f1e35] disabled:opacity-50">
           {enviando ? "Enviando..." : "Enviar convite"}
