@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Link } from "lucide-react";
+import { X, Link, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
@@ -19,9 +19,7 @@ export default function ImageUpload({
   const [enviando, setEnviando] = useState(false);
   const [urlManual, setUrlManual] = useState("");
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function uploadFile(file: File) {
     setEnviando(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -32,16 +30,41 @@ export default function ImageUpload({
     if (error) { toast.error("Erro ao enviar: " + error.message); return; }
     const { data } = supabase.storage.from("painel").getPublicUrl(path);
     onChange(data.publicUrl);
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadFile(file);
     e.target.value = "";
   }
 
+  async function abrirComFileSystemAPI() {
+    if (enviando) return;
+    try {
+      const tipos: FilePickerAcceptType[] = aceitaVideo
+        ? [{ description: "Imagem ou vídeo", accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"], "video/*": [".mp4", ".webm"] } }]
+        : [{ description: "Imagem", accept: { "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"] } }];
+
+      const [handle] = await (window as any).showOpenFilePicker({ types: tipos, multiple: false });
+      const file: File = await handle.getFile();
+      await uploadFile(file);
+    } catch (e: any) {
+      if (e?.name !== "AbortError") toast.error("Erro ao abrir arquivo");
+    }
+  }
+
   function confirmarUrl() {
-    const url = urlManual.trim();
+    let url = urlManual.trim();
     if (!url) return;
-    if (!url.startsWith("http")) { toast.error("URL inválida"); return; }
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
     onChange(url);
     setUrlManual("");
   }
+
+  const temFileSystemAPI = typeof window !== "undefined" && "showOpenFilePicker" in window;
 
   return (
     <div className="mb-4">
@@ -64,37 +87,47 @@ export default function ImageUpload({
         </div>
       ) : (
         <div className="space-y-3">
-          {/* Upload direto */}
-          <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
-            <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
-            <input
-              type="file"
-              accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
-              onChange={handleFile}
-              disabled={enviando}
-              className="block w-full text-sm text-gray-600
-                file:mr-3 file:py-1.5 file:px-3
-                file:rounded-lg file:border-0
-                file:text-sm file:font-medium
-                file:bg-[#1A2B4A] file:text-white
-                file:cursor-pointer hover:file:bg-[#0f1e35]
-                disabled:opacity-60"
-            />
-            {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
-          </div>
+          {/* Opção 1a: File System Access API (Chrome moderno) */}
+          {temFileSystemAPI ? (
+            <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
+              <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
+              <button
+                type="button"
+                disabled={enviando}
+                onClick={abrirComFileSystemAPI}
+                className="flex items-center gap-2 px-4 py-2 bg-[#1A2B4A] text-white text-sm rounded-lg hover:bg-[#0f1e35] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Upload size={15} />
+                {enviando ? "Enviando..." : "Escolher arquivo"}
+              </button>
+            </div>
+          ) : (
+            /* Fallback: input nativo para browsers sem showOpenFilePicker */
+            <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
+              <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
+              <input
+                type="file"
+                accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+                onChange={handleFile}
+                disabled={enviando}
+                className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#1A2B4A] file:text-white file:cursor-pointer hover:file:bg-[#0f1e35] disabled:opacity-60"
+              />
+              {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
+            </div>
+          )}
 
-          {/* URL manual */}
+          {/* Opção 2: colar URL */}
           <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
             <p className="text-xs text-gray-500 mb-2 font-medium flex items-center gap-1">
               <Link size={12} /> Opção 2 — colar URL da imagem
             </p>
             <div className="flex gap-2">
               <input
-                type="url"
+                type="text"
                 value={urlManual}
                 onChange={(e) => setUrlManual(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && confirmarUrl()}
-                placeholder="https://..."
+                placeholder="https://... ou www.site.com/imagem.jpg"
                 className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]"
               />
               <button
