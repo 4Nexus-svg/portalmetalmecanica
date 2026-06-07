@@ -21,7 +21,7 @@ export async function BannerSlot({ position, className }: Props) {
     .or(`start_date.is.null,start_date.lte.${hoje}`)
     .or(`end_date.is.null,end_date.gte.${hoje}`)
     .order("ordem", { ascending: true })
-    .limit(10) as { data: Pick<AdRow, "id" | "image_url" | "link" | "name" | "ordem" | "duracao">[] | null; error: unknown };
+    .limit(10) as unknown as { data: Pick<AdRow, "id" | "image_url" | "link" | "name" | "ordem" | "duracao">[] | null; error: unknown };
 
   if (!data?.length) return null;
 

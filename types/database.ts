@@ -22,9 +22,9 @@ export type Database = {
         Update: { status?: "active" | "canceled" | "past_due" | "trialing"; plan?: "monthly" | "yearly"; current_period_end?: string };
       };
       ads: {
-        Row: { id: number; name: string | null; image_url: string | null; link: string | null; position: "top" | "sidebar" | "between" | "footer" | null; start_date: string | null; end_date: string | null; impressions: number; clicks: number };
-        Insert: { name?: string | null; image_url?: string | null; link?: string | null; position?: "top" | "sidebar" | "between" | "footer" | null; start_date?: string | null; end_date?: string | null };
-        Update: { name?: string | null; image_url?: string | null; link?: string | null; position?: "top" | "sidebar" | "between" | "footer" | null; start_date?: string | null; end_date?: string | null; impressions?: number; clicks?: number };
+        Row: { id: number; name: string | null; image_url: string | null; link: string | null; position: "top" | "sidebar" | "between" | "footer" | null; start_date: string | null; end_date: string | null; impressions: number; clicks: number; ordem: number; duracao: number };
+        Insert: { name?: string | null; image_url?: string | null; link?: string | null; position?: "top" | "sidebar" | "between" | "footer" | null; start_date?: string | null; end_date?: string | null; ordem?: number; duracao?: number };
+        Update: { name?: string | null; image_url?: string | null; link?: string | null; position?: "top" | "sidebar" | "between" | "footer" | null; start_date?: string | null; end_date?: string | null; impressions?: number; clicks?: number; ordem?: number; duracao?: number };
       };
       subscribers: {
         Row: { email: string; created_at: string };
