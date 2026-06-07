@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -17,6 +17,7 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -28,7 +29,7 @@ export default function ImageUpload({
     const path = `${user?.id ?? "anon"}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("painel").upload(path, file, { contentType: file.type });
     setEnviando(false);
-    if (error) { toast.error("Erro ao enviar imagem: " + error.message); return; }
+    if (error) { toast.error("Erro ao enviar: " + error.message); return; }
     const { data } = supabase.storage.from("painel").getPublicUrl(path);
     onChange(data.publicUrl);
     e.target.value = "";
@@ -37,6 +38,16 @@ export default function ImageUpload({
   return (
     <div className="mb-4">
       <p className="block text-sm font-medium text-gray-700 mb-1">{label}</p>
+
+      {/* Input escondido — acionado pelo botão abaixo */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+        onChange={handleFile}
+        className="hidden"
+      />
+
       {valor ? (
         <div className="relative inline-block">
           {/\.(mp4|webm|ogg)(\?.*)?$/i.test(valor) ? (
@@ -53,21 +64,16 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <div className="relative w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C9A84C] hover:bg-amber-50 transition-colors">
-          {/* Input cobre toda a área — usuário clica diretamente nele */}
-          <input
-            type="file"
-            accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
-            onChange={handleFile}
-            disabled={enviando}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          />
-          <div className="flex flex-col items-center justify-center h-full pointer-events-none">
-            <Upload size={20} className="text-gray-400 mb-2" />
-            <span className="text-sm text-gray-500">{enviando ? "Enviando..." : "Clique para enviar"}</span>
-            <span className="text-xs text-gray-400 mt-0.5">{aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}</span>
-          </div>
-        </div>
+        <button
+          type="button"
+          disabled={enviando}
+          onClick={() => inputRef.current?.click()}
+          className="w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C9A84C] hover:bg-amber-50 transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Upload size={20} className="text-gray-400" />
+          <span className="text-sm text-gray-500">{enviando ? "Enviando..." : "Clique para enviar"}</span>
+          <span className="text-xs text-gray-400">{aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}</span>
+        </button>
       )}
     </div>
   );
