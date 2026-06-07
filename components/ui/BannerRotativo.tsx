@@ -6,6 +6,7 @@ type Ad = {
   image_url: string | null;
   link: string | null;
   name: string | null;
+  duracao?: number | null;
 };
 
 interface Props {
@@ -21,15 +22,16 @@ export function BannerRotativo({ ads, className = "" }: Props) {
 
   useEffect(() => {
     if (ads.length <= 1) return;
-    const timer = setInterval(() => {
+    const duracao = (ads[index]?.duracao ?? 5) * 1000;
+    const timer = setTimeout(() => {
       setVisible(false);
       setTimeout(() => {
         setIndex(i => (i + 1) % ads.length);
         setVisible(true);
       }, 400);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [ads.length]);
+    }, duracao);
+    return () => clearTimeout(timer);
+  }, [ads, index]);
 
   if (!ads.length) return null;
   const ad = ads[index];

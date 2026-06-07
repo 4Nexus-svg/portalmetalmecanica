@@ -16,7 +16,7 @@ type Ad = Database["public"]["Tables"]["ads"]["Row"];
 const POSICOES = ["top", "sidebar", "between", "footer"];
 
 function vazio(): AdInput {
-  return { name: "", image_url: null, link: null, position: "top", start_date: null, end_date: null };
+  return { name: "", image_url: null, link: null, position: "top", start_date: null, end_date: null, ordem: 0, duracao: 5 };
 }
 
 function statusAd(a: Ad): { texto: string; variante: "sucesso" | "alerta" | "neutro" } {
@@ -48,6 +48,8 @@ export default function PublicidadeClient({ ads }: { ads: Ad[] }) {
       position: a.position ?? "top",
       start_date: a.start_date,
       end_date: a.end_date,
+      ordem: a.ordem ?? 0,
+      duracao: a.duracao ?? 5,
     });
     setAberto(true);
   }
@@ -94,6 +96,8 @@ export default function PublicidadeClient({ ads }: { ads: Ad[] }) {
           { chave: "image_url", titulo: "Imagem", render: (a) => a.image_url ? <img src={a.image_url} alt="" className="h-10 rounded object-contain" /> : "—" },
           { chave: "name", titulo: "Nome" },
           { chave: "position", titulo: "Posição" },
+          { chave: "ordem", titulo: "Ordem" },
+          { chave: "duracao", titulo: "Duração", render: (a) => `${a.duracao ?? 5}s` },
           { chave: "vigencia", titulo: "Vigência", render: (a) => `${a.start_date ?? "—"} → ${a.end_date ?? "—"}` },
           { chave: "impressions", titulo: "Impr." },
           { chave: "clicks", titulo: "Cliques" },
@@ -120,6 +124,14 @@ export default function PublicidadeClient({ ads }: { ads: Ad[] }) {
             {POSICOES.map((p) => <option key={p} value={p}>{p}</option>)}
           </Select>
         </FormField>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="Ordem (sequência)">
+            <Input type="number" min={0} value={form.ordem} onChange={(e) => setForm((f) => ({ ...f, ordem: Number(e.target.value) }))} />
+          </FormField>
+          <FormField label="Duração (segundos)">
+            <Input type="number" min={1} max={60} value={form.duracao} onChange={(e) => setForm((f) => ({ ...f, duracao: Number(e.target.value) }))} />
+          </FormField>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Início">
             <Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value || null }))} />

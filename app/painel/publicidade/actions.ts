@@ -11,6 +11,8 @@ export interface AdInput {
   position: "top" | "sidebar" | "between" | "footer";
   start_date: string | null;
   end_date: string | null;
+  ordem: number;
+  duracao: number;
 }
 
 export async function criarAd(input: AdInput) {
