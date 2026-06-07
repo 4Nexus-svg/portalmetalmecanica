@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPainelUser } from "@/lib/painel/auth";
 import { podeAcessar } from "@/lib/painel/permissions";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import SecaoHeader from "@/components/painel/SecaoHeader";
 import ColunistasClient from "./ColunistasClient";
 import { columnistIdDoUsuario } from "./actions";
@@ -17,13 +17,14 @@ export default async function ColunistasPainelPage() {
 
   const ehGestor = u.role === "admin" || u.role === "editor";
   const supabase = await createClient();
+  const svcClient = await createServiceClient();
 
   const { data: colunistas } = await supabase
     .from("columnists").select("*").order("nome", { ascending: true }) as { data: Colunista[] | null; error: unknown };
 
   const meuColunistaId = ehGestor ? null : await columnistIdDoUsuario(u.userId);
 
-  let query = supabase.from("articles").select("*");
+  let query = (svcClient.from("articles") as any).select("*");
   if (!ehGestor) query = query.eq("columnist_id", meuColunistaId ?? -1);
   const { data: artigos } = await query.order("created_at", { ascending: false }) as { data: Artigo[] | null; error: unknown };
 
