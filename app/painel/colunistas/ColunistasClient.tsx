@@ -101,12 +101,34 @@ export default function ColunistasClient({
 
   const nomeColunista = (id: number) => colunistas.find((c) => c.id === id)?.nome ?? "—";
 
+  const meuPerfil = !ehGestor && meuColunistaId !== null
+    ? colunistas.find((c) => c.id === meuColunistaId) ?? null
+    : null;
+
   return (
     <div className="space-y-10">
       {!ehGestor && meuColunistaId === null && (
         <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
           Seu usuário ainda não está vinculado a um colunista — peça ao administrador para fazer o vínculo.
         </div>
+      )}
+
+      {meuPerfil && (
+        <section>
+          <h2 className="text-lg font-bold text-[#1A2B4A] mb-4">Meu Perfil</h2>
+          <div className="flex items-start gap-4 bg-white border border-gray-200 rounded-xl p-5">
+            {meuPerfil.foto_url
+              ? <img src={meuPerfil.foto_url} alt="" className="h-16 w-16 rounded-full object-cover shrink-0" />
+              : <div className="h-16 w-16 rounded-full bg-[#1A2B4A]/10 flex items-center justify-center shrink-0 text-2xl font-bold text-[#1A2B4A]">{meuPerfil.nome.charAt(0)}</div>
+            }
+            <div>
+              <p className="text-base font-semibold text-[#1A2B4A]">{meuPerfil.nome}</p>
+              {meuPerfil.cargo && <p className="text-sm text-gray-500">{meuPerfil.cargo}</p>}
+              {meuPerfil.especialidade && <p className="text-xs text-gray-400 mt-0.5">{meuPerfil.especialidade}</p>}
+              {meuPerfil.bio && <p className="text-sm text-gray-600 mt-2 line-clamp-3">{meuPerfil.bio}</p>}
+            </div>
+          </div>
+        </section>
       )}
 
       {ehGestor && (
