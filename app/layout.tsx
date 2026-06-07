@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { BannerSlot } from "@/components/ui/BannerSlot";
+import AuthHashHandler from "@/components/auth/AuthHashHandler";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="flex-1">{children}</div>
         <Footer />
         <Toaster position="top-right" />
+        <AuthHashHandler />
       </body>
     </html>
   );
