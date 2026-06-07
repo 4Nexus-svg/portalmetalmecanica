@@ -23,7 +23,7 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user") {
   const supabase = await createServiceClient();
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://portalmetalmecanica.vercel.app";
   const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${siteUrl}/login`,
+    redirectTo: `${siteUrl}/auth/callback?next=/painel`,
   });
   if (error) throw new Error(error.message);
   // Upsert garante que o perfil existe com o papel correto,
