@@ -21,7 +21,10 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user") {
   if (!u || u.role !== "admin") throw new Error("Não autorizado");
   if (!email) throw new Error("Informe um e-mail");
   const supabase = await createServiceClient();
-  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://portalmetalmecanica.vercel.app";
+  const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${siteUrl}/login`,
+  });
   if (error) throw new Error(error.message);
   // Upsert garante que o perfil existe com o papel correto,
   // independente do timing do trigger on_auth_user_created
