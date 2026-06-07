@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
@@ -17,6 +17,7 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -31,6 +32,8 @@ export default function ImageUpload({
     if (error) { toast.error("Erro ao enviar imagem: " + error.message); return; }
     const { data } = supabase.storage.from("painel").getPublicUrl(path);
     onChange(data.publicUrl);
+    // Limpa o input para permitir reenvio do mesmo arquivo
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   return (
@@ -52,12 +55,24 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed border-gray-200 cursor-pointer hover:border-[#C9A84C] hover:bg-amber-50 transition-colors">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => !enviando && inputRef.current?.click()}
+          onKeyDown={(e) => e.key === "Enter" && !enviando && inputRef.current?.click()}
+          className={`flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed border-gray-200 transition-colors ${enviando ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-[#C9A84C] hover:bg-amber-50"}`}
+        >
           <Upload size={20} className="text-gray-400 mb-2" />
           <span className="text-sm text-gray-500">{enviando ? "Enviando..." : "Clique para enviar"}</span>
           <span className="text-xs text-gray-400 mt-0.5">{aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}</span>
-          <input type="file" accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"} className="hidden" onChange={handleFile} disabled={enviando} />
-        </label>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+            className="hidden"
+            onChange={handleFile}
+          />
+        </div>
       )}
     </div>
   );
