@@ -1,8 +1,7 @@
 "use client";
 
-import { useId, useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { Upload, X } from "lucide-react";
+import { useState } from "react";
+import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
@@ -18,11 +17,6 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const rawId = useId();
-  const inputId = "imgup_" + rawId.replace(/[^a-z0-9]/gi, "_");
-
-  useEffect(() => { setMounted(true); }, []);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -40,35 +34,9 @@ export default function ImageUpload({
     e.target.value = "";
   }
 
-  function abrirDialog() {
-    if (enviando) return;
-    const input = document.getElementById(inputId) as HTMLInputElement | null;
-    input?.click();
-  }
-
   return (
     <div className="mb-4">
-      <p className="block text-sm font-medium text-gray-700 mb-1">{label}</p>
-
-      {/* Input renderizado direto no body — fora de qualquer modal/overflow */}
-      {mounted && createPortal(
-        <input
-          id={inputId}
-          type="file"
-          accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
-          onChange={handleFile}
-          disabled={enviando}
-          style={{
-            position: "fixed",
-            top: "0",
-            left: "0",
-            width: "1px",
-            height: "1px",
-            opacity: "0",
-          }}
-        />,
-        document.body
-      )}
+      <p className="block text-sm font-medium text-gray-700 mb-2">{label}</p>
 
       {valor ? (
         <div className="relative inline-block">
@@ -86,20 +54,26 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <button
-          type="button"
-          disabled={enviando}
-          onClick={abrirDialog}
-          className={`w-full h-32 rounded-lg border-2 border-dashed border-gray-200 hover:border-[#C9A84C] hover:bg-amber-50 transition-colors flex flex-col items-center justify-center gap-1 ${enviando ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-        >
-          <Upload size={20} className="text-gray-400" />
-          <span className="text-sm text-gray-500">
-            {enviando ? "Enviando..." : "Clique para enviar"}
-          </span>
-          <span className="text-xs text-gray-400">
-            {aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}
-          </span>
-        </button>
+        <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
+          <input
+            type="file"
+            accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+            onChange={handleFile}
+            disabled={enviando}
+            className="block w-full text-sm text-gray-600
+              file:mr-3 file:py-2 file:px-4
+              file:rounded-lg file:border-0
+              file:text-sm file:font-medium
+              file:bg-[#1A2B4A] file:text-white
+              file:cursor-pointer
+              hover:file:bg-[#0f1e35]
+              disabled:opacity-60"
+          />
+          <p className="mt-2 text-xs text-gray-400">
+            {aceitaVideo ? "Imagem ou vídeo (MP4, WebM, OGG)" : "JPG, PNG, GIF, WebP"}
+          </p>
+          {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
+        </div>
       )}
     </div>
   );
