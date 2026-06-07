@@ -108,7 +108,7 @@ export default function PublicidadeClient({ ads }: { ads: Ad[] }) {
       />
 
       <Modal aberto={aberto} titulo={editId ? "Editar banner" : "Novo banner"} onFechar={() => setAberto(false)}>
-        <ImageUpload label="Imagem do banner" valor={form.image_url} onChange={(url) => setForm((f) => ({ ...f, image_url: url }))} />
+        <ImageUpload label="Imagem do banner" aceitaVideo valor={form.image_url} onChange={(url) => setForm((f) => ({ ...f, image_url: url }))} />
         <FormField label="Nome">
           <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Ex: Banner home topo" />
         </FormField>

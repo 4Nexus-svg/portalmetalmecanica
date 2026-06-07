@@ -9,10 +9,12 @@ export default function ImageUpload({
   valor,
   onChange,
   label = "Imagem",
+  aceitaVideo = false,
 }: {
   valor?: string | null;
   onChange: (url: string | null) => void;
   label?: string;
+  aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
 
@@ -36,7 +38,11 @@ export default function ImageUpload({
       <p className="block text-sm font-medium text-gray-700 mb-1">{label}</p>
       {valor ? (
         <div className="relative inline-block">
-          <img src={valor} alt="" className="h-32 rounded-lg border border-gray-200 object-contain bg-gray-50" />
+          {/\.(mp4|webm|ogg)(\?.*)?$/i.test(valor) ? (
+            <video src={valor} className="h-32 rounded-lg border border-gray-200 bg-gray-50" muted playsInline />
+          ) : (
+            <img src={valor} alt="" className="h-32 rounded-lg border border-gray-200 object-contain bg-gray-50" />
+          )}
           <button
             type="button"
             onClick={() => onChange(null)}
@@ -49,7 +55,8 @@ export default function ImageUpload({
         <label className="flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed border-gray-200 cursor-pointer hover:border-[#C9A84C] hover:bg-amber-50 transition-colors">
           <Upload size={20} className="text-gray-400 mb-2" />
           <span className="text-sm text-gray-500">{enviando ? "Enviando..." : "Clique para enviar"}</span>
-          <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={enviando} />
+          <span className="text-xs text-gray-400 mt-0.5">{aceitaVideo ? "Imagem ou vídeo (MP4, WebM)" : "JPG, PNG, GIF, WebP"}</span>
+          <input type="file" accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"} className="hidden" onChange={handleFile} disabled={enviando} />
         </label>
       )}
     </div>

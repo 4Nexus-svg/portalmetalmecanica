@@ -35,7 +35,18 @@ export function BannerRotativo({ ads, className = "" }: Props) {
   const ad = ads[index];
   if (!ad?.image_url) return null;
 
-  const img = (
+  const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(ad.image_url);
+
+  const media = isVideo ? (
+    <video
+      src={ad.image_url}
+      autoPlay
+      loop
+      muted
+      playsInline
+      className={`w-full h-auto block transition-opacity duration-400 ${visible ? "opacity-100" : "opacity-0"}`}
+    />
+  ) : (
     <img
       src={ad.image_url}
       alt={ad.name ?? "Publicidade"}
@@ -49,9 +60,9 @@ export function BannerRotativo({ ads, className = "" }: Props) {
       <p className="text-[10px] text-gray-400 text-right mb-0.5 pr-1 uppercase tracking-wider">Publicidade</p>
       {ad.link ? (
         <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored nofollow">
-          {img}
+          {media}
         </a>
-      ) : img}
+      ) : media}
     </div>
   );
 }
