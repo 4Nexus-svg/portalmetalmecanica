@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Link } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 
@@ -17,6 +17,7 @@ export default function ImageUpload({
   aceitaVideo?: boolean;
 }) {
   const [enviando, setEnviando] = useState(false);
+  const [urlManual, setUrlManual] = useState("");
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -32,6 +33,14 @@ export default function ImageUpload({
     const { data } = supabase.storage.from("painel").getPublicUrl(path);
     onChange(data.publicUrl);
     e.target.value = "";
+  }
+
+  function confirmarUrl() {
+    const url = urlManual.trim();
+    if (!url) return;
+    if (!url.startsWith("http")) { toast.error("URL inválida"); return; }
+    onChange(url);
+    setUrlManual("");
   }
 
   return (
@@ -54,25 +63,49 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
-          <input
-            type="file"
-            accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
-            onChange={handleFile}
-            disabled={enviando}
-            className="block w-full text-sm text-gray-600
-              file:mr-3 file:py-2 file:px-4
-              file:rounded-lg file:border-0
-              file:text-sm file:font-medium
-              file:bg-[#1A2B4A] file:text-white
-              file:cursor-pointer
-              hover:file:bg-[#0f1e35]
-              disabled:opacity-60"
-          />
-          <p className="mt-2 text-xs text-gray-400">
-            {aceitaVideo ? "Imagem ou vídeo (MP4, WebM, OGG)" : "JPG, PNG, GIF, WebP"}
-          </p>
-          {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
+        <div className="space-y-3">
+          {/* Upload direto */}
+          <div className="rounded-lg border-2 border-dashed border-gray-200 p-4 bg-gray-50">
+            <p className="text-xs text-gray-500 mb-2 font-medium">Opção 1 — enviar arquivo</p>
+            <input
+              type="file"
+              accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
+              onChange={handleFile}
+              disabled={enviando}
+              className="block w-full text-sm text-gray-600
+                file:mr-3 file:py-1.5 file:px-3
+                file:rounded-lg file:border-0
+                file:text-sm file:font-medium
+                file:bg-[#1A2B4A] file:text-white
+                file:cursor-pointer hover:file:bg-[#0f1e35]
+                disabled:opacity-60"
+            />
+            {enviando && <p className="mt-1 text-xs text-amber-600 font-medium">Enviando...</p>}
+          </div>
+
+          {/* URL manual */}
+          <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <p className="text-xs text-gray-500 mb-2 font-medium flex items-center gap-1">
+              <Link size={12} /> Opção 2 — colar URL da imagem
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={urlManual}
+                onChange={(e) => setUrlManual(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && confirmarUrl()}
+                placeholder="https://..."
+                className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]"
+              />
+              <button
+                type="button"
+                onClick={confirmarUrl}
+                className="px-3 py-1.5 bg-[#1A2B4A] text-white text-sm rounded-lg hover:bg-[#0f1e35]"
+              >
+                OK
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
