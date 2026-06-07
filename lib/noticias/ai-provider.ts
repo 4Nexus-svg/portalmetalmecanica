@@ -14,6 +14,8 @@ function deveUsarFallback(err: unknown): boolean {
     msg.includes('Too Many') ||
     msg.includes('Service Unavailable') ||
     msg.includes('RESOURCE_EXHAUSTED') || // Gemini SDK quota
+    msg.includes('API_KEY_INVALID') ||   // chave inválida → tenta próximo
+    msg.includes('400') ||
     msg.includes('not found') ||
     msg.includes('404') ||
     msg.includes('timeout') ||            // Gemini travado → próximo
