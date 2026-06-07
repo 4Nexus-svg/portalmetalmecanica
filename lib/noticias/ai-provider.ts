@@ -7,15 +7,17 @@ const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-oss-120b:fr
 function deveUsarFallback(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (
-    msg.includes('429') ||        // quota excedida
-    msg.includes('503') ||        // serviço indisponível
+    msg.includes('429') ||
+    msg.includes('503') ||
     msg.includes('quota') ||
     msg.includes('rate limit') ||
     msg.includes('Too Many') ||
     msg.includes('Service Unavailable') ||
-    msg.includes('not found') ||  // modelo descontinuado
+    msg.includes('RESOURCE_EXHAUSTED') || // Gemini SDK quota
+    msg.includes('not found') ||
     msg.includes('404') ||
-    msg.includes('não configurada') || // chave ausente → tenta próximo
+    msg.includes('timeout') ||            // Gemini travado → próximo
+    msg.includes('não configurada') ||
     msg.includes('not configured')
   );
 }
@@ -26,7 +28,14 @@ async function callGemini(prompt: string): Promise<string> {
 
   const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-  const result = await model.generateContent(prompt);
+
+  const timeoutMs = 25000;
+  const result = await Promise.race([
+    model.generateContent(prompt),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Gemini timeout')), timeoutMs)
+    ),
+  ]);
   return result.response.text().trim();
 }
 

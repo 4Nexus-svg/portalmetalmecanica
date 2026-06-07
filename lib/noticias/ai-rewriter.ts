@@ -64,7 +64,7 @@ ${contexto}`;
       return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
     },
     {
-      timeout: 60000,
+      timeout: 120000,
       tentativas: 1,
       fallback: `<p>${metadados.resumo}</p>`,
     }
