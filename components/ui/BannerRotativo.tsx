@@ -39,6 +39,8 @@ export function BannerRotativo({ ads, className = "" }: Props) {
 
   const isVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(ad.image_url);
 
+  const mediaClass = `w-full h-20 sm:h-auto object-cover sm:object-fill block transition-opacity duration-400 ${visible ? "opacity-100" : "opacity-0"}`;
+
   const media = isVideo ? (
     <video
       src={ad.image_url}
@@ -46,13 +48,13 @@ export function BannerRotativo({ ads, className = "" }: Props) {
       loop
       muted
       playsInline
-      className={`w-full h-auto block transition-opacity duration-400 ${visible ? "opacity-100" : "opacity-0"}`}
+      className={mediaClass}
     />
   ) : (
     <img
       src={ad.image_url}
       alt={ad.name ?? "Publicidade"}
-      className={`w-full h-auto block transition-opacity duration-400 ${visible ? "opacity-100" : "opacity-0"}`}
+      className={mediaClass}
       unselectable="on"
     />
   );

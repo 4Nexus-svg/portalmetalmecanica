@@ -255,14 +255,43 @@ export default function Header() {
       {menuOpen && (
         <div className="md:hidden bg-[#1A2B4A] px-4 py-4 flex flex-col gap-1">
           {CANAIS.map((canal) => (
-            <Link
-              key={canal.label}
-              href={canal.href}
-              onClick={() => setMenuOpen(false)}
-              className="text-gray-200 text-sm font-medium py-2 border-b border-[#2a3d5e] last:border-0 hover:text-[#C9A84C] transition-colors"
-            >
-              {canal.label}
-            </Link>
+            <div key={canal.label} className="border-b border-[#2a3d5e] last:border-0">
+              <div className="flex items-center justify-between">
+                <Link
+                  href={canal.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-1 text-gray-200 text-sm font-medium py-2 hover:text-[#C9A84C] transition-colors"
+                >
+                  {canal.label}
+                </Link>
+                {canal.submenu && (
+                  <button
+                    onClick={() => setActiveSubmenu(activeSubmenu === canal.label ? null : canal.label)}
+                    className="p-2 text-gray-400 hover:text-[#C9A84C] transition-colors"
+                    aria-label={`Expandir ${canal.label}`}
+                  >
+                    <ChevronDown
+                      size={15}
+                      className={`transition-transform duration-200 ${activeSubmenu === canal.label ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                )}
+              </div>
+              {canal.submenu && activeSubmenu === canal.label && (
+                <div className="pb-2 flex flex-col gap-0.5">
+                  {canal.submenu.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => { setMenuOpen(false); setActiveSubmenu(null); }}
+                      className="text-gray-400 text-sm py-1.5 pl-3 hover:text-[#C9A84C] transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
           <div className="pt-3 flex gap-3">
             <Link href="/assinatura" onClick={() => setMenuOpen(false)} className="bg-[#C9A84C] text-white text-sm font-bold px-4 py-2 rounded">
