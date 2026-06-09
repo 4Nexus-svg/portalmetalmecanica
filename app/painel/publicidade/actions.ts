@@ -8,7 +8,7 @@ export interface AdInput {
   name: string;
   image_url: string | null;
   link: string | null;
-  position: "top" | "sidebar" | "between" | "footer";
+  position: "top" | "top_mobile" | "sidebar" | "between" | "footer";
   start_date: string | null;
   end_date: string | null;
   ordem: number;

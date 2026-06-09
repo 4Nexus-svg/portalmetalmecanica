@@ -13,7 +13,7 @@ import type { Database } from "@/types/database";
 
 type Ad = Database["public"]["Tables"]["ads"]["Row"];
 
-const POSICOES = ["top", "sidebar", "between", "footer"];
+const POSICOES = ["top", "top_mobile", "sidebar", "between", "footer"];
 
 function vazio(): AdInput {
   return { name: "", image_url: null, link: null, position: "top", start_date: null, end_date: null, ordem: 0, duracao: 5 };
