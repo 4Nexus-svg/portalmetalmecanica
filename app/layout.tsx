@@ -24,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <div className="h-[190px] shrink-0" aria-hidden="true" />
         <div className="max-w-7xl mx-auto px-4 w-full">
-          <BannerSlot position="top" className="mb-4" />
+          {/* Desktop: leaderboard 728x90 / 970x90 */}
+          <BannerSlot position="top" className="mb-4 hidden sm:block" />
+          {/* Mobile: banner 320x100 */}
+          <BannerSlot position="top_mobile" className="mb-4 block sm:hidden" />
         </div>
         <div className="flex-1">{children}</div>
         <Footer />

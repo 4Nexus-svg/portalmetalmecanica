@@ -3,7 +3,7 @@ import { BannerRotativo } from "./BannerRotativo";
 import type { Database } from "@/types/database";
 
 type AdRow = Database["public"]["Tables"]["ads"]["Row"];
-type Position = "top" | "sidebar" | "between" | "footer";
+type Position = "top" | "top_mobile" | "sidebar" | "between" | "footer";
 
 interface Props {
   position: Position;

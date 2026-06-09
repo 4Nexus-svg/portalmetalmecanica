@@ -62,15 +62,11 @@ export function BannerRotativo({ ads, className = "" }: Props) {
   return (
     <div className={`${className}`}>
       <p className="text-[10px] text-gray-400 text-right mb-0.5 pr-1 uppercase tracking-wider">Publicidade</p>
-      <div className="overflow-x-auto sm:overflow-hidden">
-        <div className="min-w-[600px] sm:min-w-0">
-          {ad.link ? (
-            <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored nofollow">
-              {media}
-            </a>
-          ) : media}
-        </div>
-      </div>
+      {ad.link ? (
+        <a href={ad.link} target="_blank" rel="noopener noreferrer sponsored nofollow">
+          {media}
+        </a>
+      ) : media}
     </div>
   );
 }
