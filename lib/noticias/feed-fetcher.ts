@@ -28,6 +28,7 @@ const FEEDS_GERAL: { url: string; nome: string }[] = [
   { url: 'https://exame.com/feed/', nome: 'Exame' },
   { url: 'https://www.infomoney.com.br/feed/', nome: 'InfoMoney' },
   { url: 'https://findes.com.br/feed/', nome: 'FINDES' },
+  { url: 'https://www.fiemg.com.br/feed/?post_type=noticias', nome: 'FIEMG' },
 ];
 
 const FEEDS_DEDICADO: { url: string; nome: string }[] = [
