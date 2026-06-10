@@ -89,26 +89,27 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
-
-          {/* Zona de drag & drop — sem dialog, arrasta do Explorer */}
+        <div className="space-y-2">
+          {/* Zona de drag & drop */}
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={`w-full rounded-lg border-2 border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-colors
-              ${arrastando ? "border-[#C9A84C] bg-amber-50" : "border-gray-300 bg-gray-50"}
-              ${enviando ? "opacity-60" : ""}`}
+            className={`w-full rounded-lg border-2 border-dashed p-6 flex flex-col items-center justify-center gap-2 transition-colors select-none
+              ${arrastando ? "border-[#C9A84C] bg-amber-50" : "border-gray-300 bg-gray-50 hover:border-gray-400"}`}
           >
-            <Upload size={24} className={arrastando ? "text-[#C9A84C]" : "text-gray-400"} />
-            <p className="text-sm font-medium text-gray-600">
-              {enviando ? "Enviando..." : arrastando ? "Solte aqui!" : "Arraste a imagem aqui"}
+            <Upload size={28} className={arrastando ? "text-[#C9A84C]" : "text-gray-300"} />
+            <p className="text-sm font-semibold text-gray-600">
+              {enviando ? "Enviando..." : arrastando ? "Solte o arquivo aqui!" : "Arraste o arquivo aqui"}
             </p>
-            <p className="text-xs text-gray-400">Arraste um arquivo do Windows Explorer para cá</p>
-
-            {/* Input nativo como alternativa ao clique */}
-            <label className="mt-1 text-xs text-[#1A2B4A] underline cursor-pointer hover:text-[#C9A84C]">
-              ou clique aqui para escolher
+            <p className="text-xs text-gray-400 text-center">
+              Abra o Windows Explorer, encontre a imagem e arraste para cá
+            </p>
+            {/* input nativo como fallback silencioso */}
+            <label className="mt-1 cursor-pointer">
+              <span className="text-xs text-gray-400 underline hover:text-[#1A2B4A]">
+                ou clique para selecionar (pode não funcionar em todos os navegadores)
+              </span>
               <input
                 type="file"
                 accept={aceitaVideo ? "image/*,video/mp4,video/webm,video/ogg" : "image/*"}
@@ -119,10 +120,10 @@ export default function ImageUpload({
             </label>
           </div>
 
-          {/* Opção 2: colar URL */}
-          <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+          {/* URL como alternativa */}
+          <div className="rounded-lg border border-gray-200 p-3 bg-gray-50">
             <p className="text-xs text-gray-500 mb-2 font-medium flex items-center gap-1">
-              <Link size={12} /> Ou cole a URL da imagem
+              <Link size={11} /> Ou cole a URL da imagem
             </p>
             <div className="flex gap-2">
               <input
@@ -130,7 +131,7 @@ export default function ImageUpload({
                 value={urlManual}
                 onChange={(e) => setUrlManual(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && confirmarUrl()}
-                placeholder="https://... ou www.site.com/imagem.jpg"
+                placeholder="https://exemplo.com/imagem.jpg"
                 className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#C9A84C]"
               />
               <button
@@ -142,7 +143,6 @@ export default function ImageUpload({
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>
