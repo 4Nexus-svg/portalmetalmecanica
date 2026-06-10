@@ -1,5 +1,12 @@
 export type TipoFonte = 'api' | 'rss-geral' | 'rss-dedicado' | 'historico';
 
+export type FonteAdicional = {
+  url: string;
+  nome: string;
+  titulo: string;
+  conteudo: string;
+};
+
 export type FeedItem = {
   titulo: string;
   url: string;
@@ -8,6 +15,7 @@ export type FeedItem = {
   imagemUrl?: string;
   fonteNome: string;
   tipoFonte: TipoFonte;
+  fontesAdicionais?: FonteAdicional[];
 };
 
 export type ItemComScore = FeedItem & { score: number };

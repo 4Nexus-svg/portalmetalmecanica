@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { FeedItem } from './types';
+import type { FeedItem, ItemComScore } from './types';
 import { slugifyTitulo, normT } from './utils';
 
 function getServiceClient() {
@@ -44,6 +44,50 @@ export function ehDuplicata(
   const tNorm = normT(item.titulo);
   if (existentes.titulos.has(tNorm) || titulosSeen.has(tNorm)) return true;
   return false;
+}
+
+export function agruparPorHistoria(items: ItemComScore[]): {
+  processados: ItemComScore[];
+  multiFonte: number;
+} {
+  const byTitulo = new Map<string, ItemComScore[]>();
+
+  for (const item of items) {
+    const key = normT(item.titulo);
+    const grupo = byTitulo.get(key) ?? [];
+    grupo.push(item);
+    byTitulo.set(key, grupo);
+  }
+
+  const processados: ItemComScore[] = [];
+  let multiFonte = 0;
+
+  for (const grupo of byTitulo.values()) {
+    const fontesUnicas = new Set(grupo.map((i) => i.fonteNome));
+
+    if (fontesUnicas.size < 2) {
+      // fonte única — mantém o de maior score
+      processados.push(grupo.sort((a, b) => b.score - a.score)[0]);
+    } else {
+      // múltiplas fontes — cria item mesclado com o de maior score como principal
+      const ordenado = grupo.sort((a, b) => b.score - a.score);
+      const principal = ordenado[0];
+      const merged: ItemComScore = {
+        ...principal,
+        fonteNome: ordenado.map((i) => i.fonteNome).join(', '),
+        fontesAdicionais: ordenado.slice(1).map((i) => ({
+          url: i.url,
+          nome: i.fonteNome,
+          titulo: i.titulo,
+          conteudo: i.conteudo,
+        })),
+      };
+      processados.push(merged);
+      multiFonte++;
+    }
+  }
+
+  return { processados, multiFonte };
 }
 
 export function marcarVisto(

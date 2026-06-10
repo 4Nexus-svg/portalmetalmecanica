@@ -78,3 +78,70 @@ ${contexto}`;
     regiao: REGIOES_VALIDAS.includes(metadados.regiao) ? metadados.regiao : 'Brasil',
   };
 }
+
+export async function reescreverMultiFonte(itens: FeedItem[]): Promise<RewriteResult> {
+  const fontesList = itens.map((i) => i.fonteNome).join(', ');
+  const contextoFontes = itens
+    .map((i, idx) =>
+      `--- Fonte ${idx + 1}: ${i.fonteNome} ---\nTítulo: ${i.titulo}\nConteúdo: ${i.conteudo.slice(0, 600)}`
+    )
+    .join('\n\n');
+
+  const metadados = await safeRun(
+    async () => {
+      const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
+As ${itens.length} fontes abaixo cobrem o MESMO evento. Crie metadados para uma matéria unificada.
+Responda APENAS com JSON válido (sem markdown):
+{"titulo":"string (máx 90 chars, mais completo que qualquer fonte individual)","resumo":"string (máx 200 chars, 1 frase que una as perspectivas)","categoria":"Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia","regiao":"ES|MG|Brasil|Internacional"}
+
+${contextoFontes}`;
+
+      const text = await generateText(prompt);
+      const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+      return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
+    },
+    {
+      fallback: {
+        titulo: itens[0].titulo.slice(0, 90),
+        resumo: itens[0].conteudo.slice(0, 200),
+        categoria: 'Mercado',
+        regiao: 'Brasil',
+      },
+    }
+  );
+
+  const conteudo = await safeRun(
+    async () => {
+      const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro.
+
+As ${itens.length} fontes abaixo cobrem o MESMO evento de perspectivas complementares: ${fontesList}.
+
+Escreva uma matéria jornalística ORIGINAL unindo as informações das fontes. REGRAS:
+- Entre 200 e 400 palavras no total
+- Use APENAS tags <p>
+- NÃO copie trechos das fontes — reescreva completamente com suas palavras
+- Contextualize o fato para profissionais do setor metalmecânico
+- No último parágrafo, cite as fontes assim: <p><em>Fontes: ${fontesList}.</em></p>
+- Responda APENAS com o HTML dos parágrafos, sem título, sem explicações
+
+${contextoFontes}`;
+
+      const html = await generateText(prompt);
+      const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+      return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
+    },
+    {
+      timeout: 120000,
+      tentativas: 1,
+      fallback: `<p>${metadados.resumo}</p><p><em>Fontes: ${fontesList}.</em></p>`,
+    }
+  );
+
+  return {
+    titulo: (metadados.titulo || itens[0].titulo).slice(0, 90),
+    resumo: (metadados.resumo || itens[0].conteudo).slice(0, 200),
+    conteudo,
+    categoria: CATEGORIAS_VALIDAS.includes(metadados.categoria) ? metadados.categoria : 'Mercado',
+    regiao: REGIOES_VALIDAS.includes(metadados.regiao) ? metadados.regiao : 'Brasil',
+  };
+}

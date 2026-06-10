@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchFeeds } from '@/lib/noticias/feed-fetcher';
 import { aplicarScoreRapidoEOrdenar, filtrarRelevanciaIA } from '@/lib/noticias/relevance-filter';
-import { reescreverComIA } from '@/lib/noticias/ai-rewriter';
+import { reescreverComIA, reescreverMultiFonte } from '@/lib/noticias/ai-rewriter';
 import { resolverImagem } from '@/lib/noticias/image-sourcer';
 import {
   buscarExistentes,
   ehDuplicata,
   marcarVisto,
   publicarNoticia,
+  agruparPorHistoria,
 } from '@/lib/noticias/publisher';
 import { processarComConcorrencia } from '@/lib/noticias/utils';
 import type { ResultadoPipeline } from '@/lib/noticias/types';
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   const modo = req.nextUrl.searchParams.get('modo') ?? 'todos';
   const dry = req.nextUrl.searchParams.get('dry') === 'true';
 
-  const resultado: ResultadoPipeline = {
+  const resultado: ResultadoPipeline & { multiFonte?: number } = {
     inseridas: 0,
     duplicadas: 0,
     irrelevantes: 0,
@@ -52,6 +53,10 @@ export async function GET(req: NextRequest) {
     // Etapa 2+3: Score rápido + filtro data (já aplicados no fetchFeeds)
     const comScore = aplicarScoreRapidoEOrdenar(items);
 
+    // Etapa 3b: Agrupar itens com mesmo título de fontes diferentes
+    const { processados, multiFonte } = agruparPorHistoria(comScore);
+    resultado.multiFonte = multiFonte;
+
     // Etapa 4: Buscar existentes no banco (deduplicação cross-execução)
     const existentes = await buscarExistentes();
     const linksSeen = new Set<string>();
@@ -61,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     // Etapa 5: Processar com concorrência 3
     await processarComConcorrencia(
-      comScore,
+      processados,
       async (item) => {
         if (resultado.inseridas >= MAX_INSERCOES || resultado.abortado) return;
 
@@ -79,8 +84,17 @@ export async function GET(req: NextRequest) {
             return;
           }
 
-          // Reescrita com IA
-          const rewrite = await reescreverComIA(item);
+          // Reescrita com IA (multi-fonte ou simples)
+          const rewrite = item.fontesAdicionais?.length
+            ? await reescreverMultiFonte([item, ...item.fontesAdicionais.map((f) => ({
+                titulo: f.titulo,
+                url: f.url,
+                conteudo: f.conteudo,
+                publicadoEm: item.publicadoEm,
+                fonteNome: f.nome,
+                tipoFonte: item.tipoFonte,
+              }))])
+            : await reescreverComIA(item);
 
           // Imagem com fallback
           const imagemFinal = await resolverImagem(item);
@@ -113,7 +127,7 @@ export async function GET(req: NextRequest) {
     );
     // Extração de eventos das notícias coletadas
     if (!dry) {
-      const eventosInseridos = await extrairEPublicarEventos(comScore);
+      const eventosInseridos = await extrairEPublicarEventos(processados);
       if (eventosInseridos > 0) {
         (resultado as typeof resultado & { eventos?: number }).eventos = eventosInseridos;
       }
