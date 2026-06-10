@@ -11,6 +11,7 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const GROQ_KEY = process.env.GROQ_API_KEY;
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const DRY = process.argv.includes('--dry');
+const REPROCESS = process.argv.includes('--reprocess');
 
 if (!SUPABASE_KEY) { console.error('SUPABASE_SERVICE_ROLE_KEY não definida'); process.exit(1); }
 
@@ -86,11 +87,21 @@ async function main() {
 
   console.log('Buscando posts do FINDES desde 2026-02-01...');
   const res = await fetch(
-    'https://findes.com.br/wp-json/wp/v2/posts?per_page=100&after=2026-02-01T00:00:00&_fields=id,date,slug,title,excerpt,link,content',
+    'https://findes.com.br/wp-json/wp/v2/posts?per_page=100&after=2026-02-01T00:00:00&_fields=id,date,slug,title,excerpt,link,content,_links&_embed=wp:featuredmedia',
     { headers: { 'User-Agent': 'PortalMetalmecanica/1.0' } }
   );
   const posts = await res.json();
   console.log(`Total: ${posts.length} posts`);
+
+  if (REPROCESS) {
+    console.log('--reprocess: deletando artigos FINDES existentes...');
+    const { error: delErr, count } = await supabase
+      .from('posts')
+      .delete({ count: 'exact' })
+      .eq('fonte_nome', 'FINDES');
+    if (delErr) { console.error('Erro ao deletar:', delErr.message); process.exit(1); }
+    console.log(`${count ?? '?'} artigos deletados.`);
+  }
 
   // Buscar URLs já existentes no banco
   const { data: existentes } = await supabase
@@ -110,23 +121,23 @@ async function main() {
     const excerptHtml = post.excerpt?.rendered ?? '';
     const resumo = excerptHtml.replace(/<[^>]+>/g, '').trim().slice(0, 200);
     const conteudoOriginal = post.content?.rendered ?? excerptHtml;
+    const featuredImage = post._embedded?.['wp:featuredmedia']?.[0]?.source_url ?? null;
 
     console.log(`\n[${inseridas + 1}] ${titulo}`);
     console.log(`  Data: ${post.date} | URL: ${url}`);
 
     let conteudoFinal = conteudoOriginal;
-    if (GEMINI_KEY) {
-      console.log('  Reescrevendo com IA...');
-      const reescrito = await reescrever(titulo, conteudoOriginal);
-      if (reescrito) {
-        conteudoFinal = reescrito;
-        console.log('  ✓ Reescrito');
-      } else {
-        console.log('  ! Falhou, usando original');
-      }
-      // Pausa para não estourar cota da API
-      await new Promise(r => setTimeout(r, 1500));
+    console.log('  Reescrevendo com IA...');
+    const reescrito = await reescrever(titulo, conteudoOriginal);
+    if (reescrito) {
+      conteudoFinal = reescrito;
+      console.log('  ✓ Reescrito');
+    } else {
+      console.log('  ! IA falhou, pulando artigo');
+      erros++;
+      continue;
     }
+    await new Promise(r => setTimeout(r, 1500));
 
     if (DRY) {
       console.log('  [DRY] Simulado');
@@ -142,7 +153,7 @@ async function main() {
       title: titulo,
       excerpt: resumo,
       content: conteudoFinal,
-      featured_image: null,
+      featured_image: featuredImage,
       category: 'Industria',
       region: 'ES',
       author_id: null,

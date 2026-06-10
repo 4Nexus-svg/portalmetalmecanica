@@ -80,7 +80,7 @@ Conteúdo: ${texto}`;
 
 async function fetchPagina(page) {
   const res = await fetch(
-    `https://www.fiemg.com.br/wp-json/wp/v2/noticias?per_page=100&after=2026-02-01T00:00:00&page=${page}&_fields=id,date,slug,title,excerpt,link,content`,
+    `https://www.fiemg.com.br/wp-json/wp/v2/noticias?per_page=100&after=2026-02-01T00:00:00&page=${page}&_fields=id,date,slug,title,excerpt,link,content,_links&_embed=wp:featuredmedia`,
     { headers: { 'User-Agent': 'PortalMetalmecanica/1.0' } }
   );
   return res.json();
@@ -90,7 +90,7 @@ async function main() {
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   console.log('Buscando posts da FIEMG desde 2026-02-01...');
-  const res = await fetch('https://www.fiemg.com.br/wp-json/wp/v2/noticias?per_page=100&after=2026-02-01T00:00:00&_fields=id');
+  const res = await fetch('https://www.fiemg.com.br/wp-json/wp/v2/noticias?per_page=100&after=2026-02-01T00:00:00&_fields=id,_links&_embed=wp:featuredmedia');
   const totalPages = parseInt(res.headers.get('x-wp-totalpages') ?? '1');
   const total = res.headers.get('x-wp-total');
   console.log(`Total: ${total} posts em ${totalPages} páginas`);
@@ -117,6 +117,7 @@ async function main() {
     const excerptHtml = post.excerpt?.rendered ?? '';
     const resumo = excerptHtml.replace(/<[^>]+>/g, '').trim().slice(0, 200);
     const conteudoOriginal = post.content?.rendered ?? excerptHtml;
+    const featuredImage = post._embedded?.['wp:featuredmedia']?.[0]?.source_url ?? null;
 
     console.log(`\n[${inseridas + puladas + 1}/${posts.length}] ${titulo.slice(0, 70)}`);
 
@@ -144,7 +145,7 @@ async function main() {
       title: titulo,
       excerpt: resumo,
       content: conteudoFinal,
-      featured_image: null,
+      featured_image: featuredImage,
       category: 'Industria',
       region: 'MG',
       author_id: null,
