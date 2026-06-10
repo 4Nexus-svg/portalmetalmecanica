@@ -21,13 +21,6 @@ const TERMOS_CURRENTS = [
   'energia renovável eficiência energética indústria Brasil',
 ];
 
-// NewsAPI: segurança + tecnologia + geral (confirmado funcionando, 13 itens)
-const TERMOS_NEWSAPI = [
-  'segurança trabalho metalurgia NR indústria',
-  'automação industrial robótica manufatura Brasil',
-  'siderurgia aço metalmecânica mercado',
-];
-
 // ─── Feeds RSS ────────────────────────────────────────────────────────────────
 // RSS confirmados funcionando (retornam itens)
 const FEEDS_GERAL: { url: string; nome: string }[] = [
@@ -342,31 +335,6 @@ async function fetchCurrents(): Promise<FeedItem[]> {
     }));
 }
 
-async function fetchNewsAPI(): Promise<FeedItem[]> {
-  const key = process.env.NEWSAPI_KEY;
-  if (!key) return [];
-  // Uma única busca ampla para preservar cota diária do plano gratuito
-  const termo = 'siderurgia metalurgia aço automação industrial Brasil';
-  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(termo)}&language=pt&pageSize=20&sortBy=publishedAt&apiKey=${key}`;
-  const data = await safeRun(
-    async () => {
-      const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
-      return res.json() as Promise<{ articles?: { title: string; url: string; description: string | null; publishedAt: string; urlToImage?: string; source?: { id?: string; name?: string } }[] }>;
-    },
-    { fallback: { articles: [] } }
-  );
-  return (data.articles ?? [])
-    .filter(a => a.title !== '[Removed]' && a.url)
-    .map(a => ({
-      titulo: a.title,
-      url: a.url,
-      conteudo: a.description ?? '',
-      publicadoEm: new Date(a.publishedAt),
-      imagemUrl: a.urlToImage,
-      fonteNome: a.source?.name || nomeDoSite(a.url),
-      tipoFonte: 'api' as TipoFonte,
-    }));
-}
 
 // ─── Validação de data ────────────────────────────────────────────────────────
 function dentroDoLimite(item: FeedItem): boolean {
@@ -386,12 +354,11 @@ export async function fetchFeeds(modo = 'todos'): Promise<{ items: FeedItem[]; f
   const all: FeedItem[] = [];
 
   if (modo === 'todos' || modo === 'apis') {
-    const [gnews, newsdata, currents, newsapi] = await Promise.all([
-      fetchGNews(), fetchNewsData(), fetchCurrents(), fetchNewsAPI(),
+    const [gnews, newsdata, currents] = await Promise.all([
+      fetchGNews(), fetchNewsData(), fetchCurrents(),
     ]);
     for (const [nome, lote] of [
-      ['GNews', gnews], ['NewsData', newsdata],
-      ['Currents', currents], ['NewsAPI', newsapi],
+      ['GNews', gnews], ['NewsData', newsdata], ['Currents', currents],
     ] as [string, FeedItem[]][]) {
       feedStats[nome] = lote.length;
       all.push(...lote);
