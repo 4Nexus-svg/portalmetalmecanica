@@ -41,7 +41,7 @@ async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPi
     resultado.feedStats = feedStats;
 
     if (items.length === 0) {
-      return NextResponse.json({ ...resultado, msg: 'Nenhum item coletado' });
+      return { ...resultado, dry, msg: 'Nenhum item coletado' };
     }
 
     // Etapa 2+3: Score rápido + filtro data (já aplicados no fetchFeeds)
