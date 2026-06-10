@@ -17,6 +17,10 @@ CREATE POLICY "home_blocks escrita painel"
   USING (public.user_role() IN ('admin','editor'))
   WITH CHECK (public.user_role() IN ('admin','editor'));
 
+GRANT SELECT ON public.home_blocks TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.home_blocks TO authenticated;
+GRANT ALL ON public.home_blocks TO service_role;
+
 INSERT INTO public.home_blocks (key, label, coluna, ordem, ativo) VALUES
   ('manchete',          'Manchete principal',   'full',    0, true),
   ('faixa_colunistas',  'Faixa de colunistas',  'full',    1, true),

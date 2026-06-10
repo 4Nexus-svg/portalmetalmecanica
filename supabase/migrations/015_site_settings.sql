@@ -13,6 +13,10 @@ CREATE POLICY "site_settings escrita admin"
   USING (public.user_role() = 'admin')
   WITH CHECK (public.user_role() = 'admin');
 
+GRANT SELECT ON public.site_settings TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.site_settings TO authenticated;
+GRANT ALL ON public.site_settings TO service_role;
+
 INSERT INTO public.site_settings (key, value) VALUES
   ('site_name', 'Portal MetalMecânica'),
   ('contact_email', ''),
