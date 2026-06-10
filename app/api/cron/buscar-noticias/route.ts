@@ -25,7 +25,7 @@ function isAutorizado(req: NextRequest): boolean {
   );
 }
 
-async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPipeline & { multiFonte?: number; dry: boolean }> {
+async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPipeline & { multiFonte?: number; dry: boolean; msg?: string; error?: string }> {
   const resultado: ResultadoPipeline & { multiFonte?: number } = {
     inseridas: 0,
     duplicadas: 0,
