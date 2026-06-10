@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { waitUntil } from '@vercel/functions';
 import { fetchFeeds } from '@/lib/noticias/feed-fetcher';
 import { aplicarScoreRapidoEOrdenar, filtrarRelevanciaIA } from '@/lib/noticias/relevance-filter';
 import { reescreverComIA, reescreverMultiFonte } from '@/lib/noticias/ai-rewriter';
@@ -24,14 +25,7 @@ function isAutorizado(req: NextRequest): boolean {
   );
 }
 
-export async function GET(req: NextRequest) {
-  if (!isAutorizado(req)) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-  }
-
-  const modo = req.nextUrl.searchParams.get('modo') ?? 'todos';
-  const dry = req.nextUrl.searchParams.get('dry') === 'true';
-
+async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPipeline & { multiFonte?: number; dry: boolean }> {
   const resultado: ResultadoPipeline & { multiFonte?: number } = {
     inseridas: 0,
     duplicadas: 0,
@@ -133,11 +127,26 @@ export async function GET(req: NextRequest) {
       }
     }
   } catch (err) {
-    return NextResponse.json(
-      { ...resultado, error: err instanceof Error ? err.message : 'Erro desconhecido' },
-      { status: 500 }
-    );
+    console.error('[pipeline] erro fatal:', err);
+    return { ...resultado, dry, error: err instanceof Error ? err.message : 'Erro desconhecido' };
   }
 
-  return NextResponse.json({ ...resultado, dry });
+  return { ...resultado, dry };
+}
+
+export async function GET(req: NextRequest) {
+  if (!isAutorizado(req)) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+  }
+
+  const modo = req.nextUrl.searchParams.get('modo') ?? 'todos';
+  const dry = req.nextUrl.searchParams.get('dry') === 'true';
+
+  // Responde imediatamente para não ultrapassar o timeout do cron-job.org (30s)
+  // O processamento continua em background via waitUntil
+  waitUntil(
+    executarPipeline(modo, dry).then((r) => console.log('[pipeline] concluído:', JSON.stringify(r)))
+  );
+
+  return NextResponse.json({ status: 'iniciado', modo, dry });
 }
