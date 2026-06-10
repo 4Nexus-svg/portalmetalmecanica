@@ -263,7 +263,7 @@ async function fetchGNews(): Promise<FeedItem[]> {
         const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
         return res.json() as Promise<{ articles?: { title: string; url: string; description: string; publishedAt: string; image?: string; source?: { name?: string; url?: string } }[] }>;
       },
-      { fallback: { articles: [] } }
+      { fallback: { articles: [] }, onError: (e) => console.error('[GNews] erro:', e) }
     );
     for (const a of data.articles ?? []) {
       if (!a.title || !a.url) continue;
@@ -292,7 +292,7 @@ async function fetchNewsData(): Promise<FeedItem[]> {
         const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
         return res.json() as Promise<{ results?: { title: string; link: string; description: string | null; pubDate: string; image_url?: string; source_id?: string; source_name?: string }[] }>;
       },
-      { fallback: { results: [] } }
+      { fallback: { results: [] }, onError: (e) => console.error('[NewsData] erro:', e) }
     );
     for (const a of data.results ?? []) {
       if (!a.title || !a.link) continue;
@@ -320,7 +320,7 @@ async function fetchCurrents(): Promise<FeedItem[]> {
       const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
       return res.json() as Promise<{ news?: { title: string; url: string; description: string; published: string; image?: string }[] }>;
     },
-    { fallback: { news: [] } }
+    { fallback: { news: [] }, onError: (e) => console.error('[Currents] erro:', e) }
   );
   return (data.news ?? [])
     .filter(a => a.title && a.url)

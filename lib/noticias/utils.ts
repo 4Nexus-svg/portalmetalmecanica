@@ -5,6 +5,7 @@ export async function safeRun<T>(
     delayBase?: number;
     timeout?: number;
     fallback?: T;
+    onError?: (err: unknown) => void;
   } = {}
 ): Promise<T> {
   const { tentativas = 3, delayBase = 500, timeout = 15000 } = opts;
@@ -17,8 +18,9 @@ export async function safeRun<T>(
           setTimeout(() => reject(new Error('safeRun timeout')), timeout)
         ),
       ]);
-    } catch {
+    } catch (err) {
       if (i === tentativas - 1) {
+        opts.onError?.(err);
         if ('fallback' in opts) return opts.fallback as T;
         throw new Error(`safeRun falhou após ${tentativas} tentativas`);
       }
