@@ -71,6 +71,48 @@ export type Database = {
         Insert: { title: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
         Update: { title?: string; company?: string | null; city?: string | null; state?: string | null; type?: string | null; salary?: string | null; description?: string | null; link?: string | null; contact_email?: string | null; ativo?: boolean; expires_at?: string | null };
       };
+      licitacoes_pncp: {
+        Row: {
+          id: string;
+          orgao_cnpj: string;
+          orgao_nome: string | null;
+          uf: string;
+          objeto: string | null;
+          modalidade: string | null;
+          valor_estimado: number | null;
+          data_publicacao: string | null;
+          data_encerramento: string | null;
+          status: string;
+          link_pncp: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          orgao_cnpj: string;
+          orgao_nome?: string | null;
+          uf: string;
+          objeto?: string | null;
+          modalidade?: string | null;
+          valor_estimado?: number | null;
+          data_publicacao?: string | null;
+          data_encerramento?: string | null;
+          status?: string;
+          link_pncp?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          orgao_nome?: string | null;
+          uf?: string;
+          objeto?: string | null;
+          modalidade?: string | null;
+          valor_estimado?: number | null;
+          data_publicacao?: string | null;
+          data_encerramento?: string | null;
+          status?: string;
+          link_pncp?: string | null;
+          updated_at?: string;
+        };
+      };
       site_settings: {
         Row: { key: string; value: string | null };
         Insert: { key: string; value?: string | null };
