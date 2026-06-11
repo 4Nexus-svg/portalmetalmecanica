@@ -3,5 +3,5 @@ import AssinaturaClient from "./AssinaturaClient";
 
 export default async function AssinaturaPage() {
   const s = await getSettings();
-  return <AssinaturaClient precoMensal={s.subscription_price || "290"} />;
+  return <AssinaturaClient precoMensal={s.subscription_price || "49,90"} />;
 }

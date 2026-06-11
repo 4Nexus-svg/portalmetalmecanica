@@ -9,12 +9,12 @@ export default function AssinaturaClient({ precoMensal }: { precoMensal: string 
 
   const PLANS = [
     {
-      id: "monthly", label: "Mensal", price: `R$ ${precoMensal}`, period: "/mes",
-      features: ["Acesso a todos os conteudos exclusivos", "Downloads de PDFs", "Newsletter premium", "Cancele quando quiser"],
+      id: "monthly", label: "Mensal", price: `R$ ${precoMensal.replace('.', ',')}`, period: "/mês",
+      features: ["Acesso a todos os conteúdos exclusivos", "Downloads de PDFs", "Newsletter premium", "Cancele quando quiser"],
     },
     {
-      id: "yearly", label: "Anual", price: "R$ 2.490", period: "/ano", badge: "MELHOR VALOR",
-      features: ["Tudo do plano mensal", "2 meses gratis", "Acesso antecipado a relatorios", "Suporte prioritario"],
+      id: "yearly", label: "Anual", price: "R$ 499,00", period: "/ano", badge: "MELHOR VALOR",
+      features: ["Tudo do plano mensal", "2 meses grátis", "Acesso antecipado a relatórios", "Suporte prioritário"],
     },
   ];
 
@@ -40,8 +40,8 @@ export default function AssinaturaClient({ precoMensal }: { precoMensal: string 
   return (
     <main className="max-w-4xl mx-auto px-4 py-16">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-brand mb-4">Assine o Portal Metalmecanica</h1>
-        <p className="text-xl text-gray-600">Acesse conteudos exclusivos sobre o setor metalmecanico de ES e MG.</p>
+        <h1 className="text-4xl font-bold text-brand mb-4">Assine o Portal Metalmecânica</h1>
+        <p className="text-xl text-gray-600">Acesse conteúdos exclusivos sobre o setor metalmecânico de ES e MG.</p>
       </div>
       <div className="grid md:grid-cols-2 gap-6">
         {PLANS.map((plan) => (
