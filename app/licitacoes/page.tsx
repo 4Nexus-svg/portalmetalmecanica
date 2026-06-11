@@ -66,13 +66,57 @@ export default async function LicitacoesPage({ searchParams }: Props) {
           </h1>
         </div>
         <p className="text-gray-500 text-sm ml-4">
-          Oportunidades de compras públicas para o setor metalmecânico em ES e MG.{' '}
-          Fonte: PNCP — atualizadas diariamente.
+          Oportunidades de compras públicas para o setor metalmecânico em ES e MG.
         </p>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      {/* Links diretos PNCP */}
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-8">
+        <p className="text-sm font-semibold text-[#1A2B4A] mb-1">Buscar diretamente no PNCP</p>
+        <p className="text-xs text-gray-500 mb-4">
+          O Portal Nacional de Contratações Públicas (PNCP) é a fonte oficial de licitações federais.
+          Pesquise em tempo real filtrando por estado e palavras-chave do setor.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://pncp.gov.br/app/editais?uf=ES"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#1A2B4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0f1e35] transition-colors"
+          >
+            Licitações no ES →
+          </a>
+          <a
+            href="https://pncp.gov.br/app/editais?uf=MG"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-[#1A2B4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0f1e35] transition-colors"
+          >
+            Licitações em MG →
+          </a>
+          <a
+            href="https://pncp.gov.br/app/editais"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 border border-[#1A2B4A] text-[#1A2B4A] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1A2B4A]/5 transition-colors"
+          >
+            Busca avançada no PNCP
+          </a>
+        </div>
+      </div>
+
+      {/* Separador curadoria */}
+      {licitacoes && licitacoes.length > 0 && (
+        <div className="flex items-center gap-3 mb-5">
+          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+            Selecionadas pela redação
+          </h2>
+          <div className="flex-1 h-px bg-gray-100" />
+        </div>
+      )}
+
+      {/* Filtros — só exibe se há itens */}
+      <div className={`flex flex-wrap gap-2 mb-6 ${!licitacoes?.length ? 'hidden' : ''}`}>
         {[
           { label: 'Todos os estados', u: undefined },
           { label: 'Espírito Santo',   u: 'ES' },
@@ -171,7 +215,7 @@ export default async function LicitacoesPage({ searchParams }: Props) {
       )}
 
       <p className="mt-8 text-xs text-gray-400">
-        Fonte: Portal Nacional de Contratações Públicas (PNCP). Dados atualizados diariamente.
+        Fonte: Portal Nacional de Contratações Públicas (PNCP). Licitações selecionadas pela equipe editorial.
       </p>
     </main>
   );

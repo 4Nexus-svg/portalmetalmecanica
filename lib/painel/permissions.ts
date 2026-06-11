@@ -9,11 +9,11 @@ export type Role = "admin" | "editor" | "comercial" | "colunista";
 export type Secao =
   | "dashboard" | "publicidade" | "classificados" | "guia"
   | "vagas" | "eventos" | "colunistas" | "destaques"
-  | "home" | "configuracoes" | "usuarios";
+  | "home" | "configuracoes" | "usuarios" | "licitacoes";
 
 const ACESSO: Record<Role, Secao[]> = {
-  admin:     ["dashboard", "publicidade", "classificados", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "configuracoes", "usuarios"],
-  editor:    ["dashboard", "guia", "vagas", "eventos", "colunistas", "destaques", "home"],
+  admin:     ["dashboard", "publicidade", "classificados", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "configuracoes", "usuarios", "licitacoes"],
+  editor:    ["dashboard", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "licitacoes"],
   comercial: ["dashboard", "publicidade", "classificados", "destaques"],
   colunista: ["dashboard", "colunistas"],
 };
@@ -52,6 +52,7 @@ export const SECOES_META: Record<Secao, SecaoMeta> = {
   home:          { label: "Home",            rota: "/painel/home",           icone: Home,            fase: 3 },
   configuracoes: { label: "Configurações",   rota: "/painel/configuracoes",  icone: Settings,        fase: 3 },
   usuarios:      { label: "Usuários",        rota: "/painel/usuarios",       icone: Users,           fase: 3 },
+  licitacoes:    { label: "Licitações",      rota: "/painel/licitacoes",     icone: Briefcase,       fase: 3 },
 };
 
 /** Converte o role do banco (5 valores) num Role de painel, ou null se não acessa o painel. */

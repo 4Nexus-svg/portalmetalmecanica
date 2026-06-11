@@ -19,6 +19,7 @@ const DESCRICAO: Record<Secao, string> = {
   home:          "Montagem e organização da home do portal.",
   configuracoes: "Configurações gerais do portal.",
   usuarios:      "Usuários e papéis de acesso ao painel.",
+  licitacoes:    "Licitações públicas do setor metalmecânico.",
 };
 
 export default async function StubPage({ secao }: { secao: Secao }) {
