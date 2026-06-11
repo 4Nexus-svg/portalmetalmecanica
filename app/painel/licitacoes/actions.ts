@@ -31,7 +31,7 @@ export async function criarLicitacao(input: LicitacaoInput) {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/painel/licitacoes");
-  revalidatePath("/licitacoes");
+  revalidatePath("/mercado/licitacoes");
 }
 
 export async function atualizarLicitacao(id: string, input: LicitacaoInput) {
@@ -42,7 +42,7 @@ export async function atualizarLicitacao(id: string, input: LicitacaoInput) {
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/licitacoes");
-  revalidatePath("/licitacoes");
+  revalidatePath("/mercado/licitacoes");
 }
 
 export async function excluirLicitacao(id: string) {
@@ -51,5 +51,5 @@ export async function excluirLicitacao(id: string) {
   const { error } = await supabase.from("licitacoes_pncp").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/licitacoes");
-  revalidatePath("/licitacoes");
+  revalidatePath("/mercado/licitacoes");
 }

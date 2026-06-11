@@ -34,7 +34,7 @@ function buildUrl(params: Record<string, string | undefined>) {
   const p = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => { if (v) p.set(k, v); });
   const s = p.toString();
-  return '/licitacoes' + (s ? '?' + s : '');
+  return '/mercado/licitacoes' + (s ? '?' + s : '');
 }
 
 export default async function LicitacoesPage({ searchParams }: Props) {
