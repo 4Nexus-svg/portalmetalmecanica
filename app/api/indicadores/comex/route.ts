@@ -26,16 +26,22 @@ export async function GET(req: NextRequest) {
     .gte('ano', anoInicio)
     .order('ano').order('mes');
 
-  // 2. Top capítulos no ano atual
-  const { data: topCapitulos, error: e2 } = await supabase
+  // 2. Top capítulos no ano atual (acumulado — soma todos os meses)
+  const { data: capitulosRaw, error: e2 } = await supabase
     .from('indicadores_comex')
     .select('capitulo, capitulo_desc, vl_fob')
     .eq('tipo', tipo)
     .eq('uf', uf)
     .eq('ano', anoAtual)
-    .not('capitulo', 'is', null)
-    .order('vl_fob', { ascending: false })
-    .limit(10);
+    .not('capitulo', 'is', null);
+
+  const capMap = new Map<string, { capitulo: string; capitulo_desc: string | null; vl_fob: number }>();
+  for (const r of capitulosRaw ?? []) {
+    const ex = capMap.get(r.capitulo);
+    if (ex) ex.vl_fob += r.vl_fob;
+    else capMap.set(r.capitulo, { capitulo: r.capitulo, capitulo_desc: r.capitulo_desc, vl_fob: r.vl_fob });
+  }
+  const topCapitulos = [...capMap.values()].sort((a, b) => b.vl_fob - a.vl_fob).slice(0, 10);
 
   // 3. Comparativo ES vs MG (totais anuais)
   const { data: comparativo, error: e3 } = await supabase
