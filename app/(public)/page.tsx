@@ -5,7 +5,7 @@ import FaixaColunistas from "@/components/home/FaixaColunistas";
 import { EmpresasDestaque } from "@/components/ui/EmpresasDestaque";
 import GridNoticias from "@/components/home/GridNoticias";
 import BannerBetween from "@/components/home/BannerBetween";
-import MaisNoticias from "@/components/home/MaisNoticias";
+import SecoesCategorias from "@/components/home/SecoesCategorias";
 import BannerSidebar from "@/components/home/BannerSidebar";
 import MaisLidas from "@/components/home/MaisLidas";
 import Newsletter from "@/components/home/Newsletter";
@@ -39,6 +39,18 @@ export default async function HomePage() {
     .from("posts").select("*").not("published_at", "is", null).neq("category", "Legislacao")
     .order("published_at", { ascending: false }).limit(20) as { data: Post[] | null; error: unknown };
 
+  const CATS_SECOES = ["Espírito Santo", "Minas Gerais", "Segurança do Trabalho", "Economia"] as const;
+  const { data: postsCats } = await supabase
+    .from("posts").select("*").not("published_at", "is", null)
+    .in("category", [...CATS_SECOES])
+    .order("published_at", { ascending: false }).limit(40) as { data: Post[] | null; error: unknown };
+
+  const secoes = CATS_SECOES.map((cat) => ({
+    titulo: cat,
+    category: cat,
+    posts: (postsCats ?? []).filter((p) => p.category === cat),
+  }));
+
   const { data: blocosDb } = await supabase
     .from("home_blocks").select("*").eq("ativo", true).order("ordem", { ascending: true }) as { data: Bloco[] | null; error: unknown };
 
@@ -59,7 +71,7 @@ export default async function HomePage() {
     empresas_destaque: <EmpresasDestaque />,
     grid_noticias: <GridNoticias posts={grid} />,
     banner_between: <BannerBetween />,
-    mais_noticias: <MaisNoticias posts={ultimasNoticias} />,
+    mais_noticias: <SecoesCategorias secoes={secoes} />,
     banner_sidebar: <BannerSidebar />,
     mais_lidas: <MaisLidas posts={maisLidas} />,
     newsletter: <Newsletter />,
