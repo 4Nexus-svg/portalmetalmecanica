@@ -24,7 +24,7 @@ const ORDEM_PADRAO: Pick<Bloco, "key" | "coluna" | "ordem" | "ativo">[] = [
   { key: "empresas_destaque", coluna: "full", ordem: 2, ativo: true },
   { key: "grid_noticias", coluna: "main", ordem: 0, ativo: true },
   { key: "banner_between", coluna: "main", ordem: 1, ativo: true },
-  { key: "mais_noticias", coluna: "after", ordem: 0, ativo: true },
+  { key: "mais_noticias", coluna: "after" as "main", ordem: 0, ativo: true },
   { key: "banner_sidebar", coluna: "sidebar", ordem: 0, ativo: true },
   { key: "mais_lidas", coluna: "sidebar", ordem: 1, ativo: true },
   { key: "newsletter", coluna: "sidebar", ordem: 2, ativo: true },
