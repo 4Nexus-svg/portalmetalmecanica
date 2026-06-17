@@ -46,10 +46,10 @@ export default async function HomePage() {
 
   const todos = postsSecoes ?? [];
   const secoes = [
-    { titulo: "Espírito Santo",       posts: todos.filter((p) => p.region === "ES") },
-    { titulo: "Minas Gerais",         posts: todos.filter((p) => p.region === "MG") },
-    { titulo: "Segurança do Trabalho",posts: todos.filter((p) => p.category === "Legislacao") },
-    { titulo: "Economia",             posts: todos.filter((p) => p.category === "Mercado") },
+    { titulo: "Espírito Santo",        href: "/noticias/es",        posts: todos.filter((p) => p.region === "ES") },
+    { titulo: "Minas Gerais",          href: "/noticias/mg",        posts: todos.filter((p) => p.region === "MG") },
+    { titulo: "Segurança do Trabalho", href: "/noticias/seguranca", posts: todos.filter((p) => p.category === "Legislacao") },
+    { titulo: "Economia",              href: "/noticias/economia",  posts: todos.filter((p) => p.category === "Mercado") },
   ];
 
   const { data: blocosDb } = await supabase
@@ -72,7 +72,7 @@ export default async function HomePage() {
     empresas_destaque: <EmpresasDestaque />,
     grid_noticias: <GridNoticias posts={grid} />,
     banner_between: <BannerBetween />,
-    mais_noticias: <SecoesCategorias secoes={secoes} />,
+    mais_noticias: null,
     banner_sidebar: <BannerSidebar />,
     mais_lidas: <MaisLidas posts={maisLidas} />,
     newsletter: <Newsletter />,
@@ -105,11 +105,9 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {after.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 pb-8 mt-12">
-          {after.map((b) => <div key={b.key}>{COMPONENTES[b.key]}</div>)}
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto px-4 pb-8 mt-12">
+        <SecoesCategorias secoes={secoes} />
+      </div>
     </>
   );
 }
