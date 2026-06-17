@@ -43,15 +43,18 @@ export default function SecoesCategorias({ secoes }: { secoes: Secao[] }) {
                       />
                     </div>
                   )}
-                  <div className="p-3 flex-1">
+                  <div className="p-3 flex-1 flex flex-col">
                     {post.category && (
                       <span className="text-[11px] font-bold text-[#C9A84C] uppercase tracking-wide">
                         {post.category}
                       </span>
                     )}
-                    <h3 className="font-bold text-gray-900 group-hover:text-[#1A2B4A] transition-colors line-clamp-3 text-sm mt-1 leading-snug">
+                    <h3 className="font-bold text-gray-900 group-hover:text-[#1A2B4A] transition-colors line-clamp-3 text-sm mt-1 leading-snug flex-1">
                       {post.title}
                     </h3>
+                    {post.fonte_nome && (
+                      <p className="text-[11px] text-gray-400 mt-2 font-medium">{post.fonte_nome}</p>
+                    )}
                   </div>
                 </Link>
               ))}
