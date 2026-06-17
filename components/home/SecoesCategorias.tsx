@@ -5,7 +5,6 @@ type Post = Database["public"]["Tables"]["posts"]["Row"];
 
 interface Secao {
   titulo: string;
-  category: string;
   posts: Post[];
 }
 
