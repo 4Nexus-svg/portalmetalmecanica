@@ -39,17 +39,18 @@ export default async function HomePage() {
     .from("posts").select("*").not("published_at", "is", null).neq("category", "Legislacao")
     .order("published_at", { ascending: false }).limit(20) as { data: Post[] | null; error: unknown };
 
-  const CATS_SECOES = ["Espírito Santo", "Minas Gerais", "Segurança do Trabalho", "Economia"] as const;
-  const { data: postsCats } = await supabase
+  const { data: postsSecoes } = await supabase
     .from("posts").select("*").not("published_at", "is", null)
-    .in("category", [...CATS_SECOES])
-    .order("published_at", { ascending: false }).limit(40) as { data: Post[] | null; error: unknown };
+    .or("region.eq.ES,region.eq.MG,category.eq.Legislacao,category.eq.Mercado")
+    .order("published_at", { ascending: false }).limit(60) as { data: Post[] | null; error: unknown };
 
-  const secoes = CATS_SECOES.map((cat) => ({
-    titulo: cat,
-    category: cat,
-    posts: (postsCats ?? []).filter((p) => p.category === cat),
-  }));
+  const todos = postsSecoes ?? [];
+  const secoes = [
+    { titulo: "Espírito Santo",       posts: todos.filter((p) => p.region === "ES") },
+    { titulo: "Minas Gerais",         posts: todos.filter((p) => p.region === "MG") },
+    { titulo: "Segurança do Trabalho",posts: todos.filter((p) => p.category === "Legislacao") },
+    { titulo: "Economia",             posts: todos.filter((p) => p.category === "Mercado") },
+  ];
 
   const { data: blocosDb } = await supabase
     .from("home_blocks").select("*").eq("ativo", true).order("ordem", { ascending: true }) as { data: Bloco[] | null; error: unknown };
