@@ -24,9 +24,12 @@ export default function Manchete({ destaque, secundarias }: { destaque?: Post; s
               )}
               <h2 className="text-white text-2xl md:text-3xl font-bold leading-tight mb-2 group-hover:text-[#C9A84C] transition-colors">{destaque.title}</h2>
               {destaque.excerpt && <p className="text-gray-300 text-sm line-clamp-2">{destaque.excerpt}</p>}
-              {destaque.published_at && (
-                <p className="text-gray-400 text-xs mt-2">{format(new Date(destaque.published_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
-              )}
+              <div className="flex items-center gap-3 mt-2">
+                {destaque.fonte_nome && <p className="text-gray-400 text-xs font-medium">{destaque.fonte_nome}</p>}
+                {destaque.published_at && (
+                  <p className="text-gray-400 text-xs">{format(new Date(destaque.published_at), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+                )}
+              </div>
             </div>
           </div>
         </Link>
@@ -44,9 +47,12 @@ export default function Manchete({ destaque, secundarias }: { destaque?: Post; s
               <div className="flex-1 min-w-0">
                 {post.category && <span className="text-xs font-bold text-[#C9A84C] uppercase">{post.category}</span>}
                 <h3 className="text-sm font-semibold text-gray-900 group-hover:text-[#1A2B4A] line-clamp-2 mt-0.5 leading-tight">{post.title}</h3>
-                {post.published_at && (
-                  <p className="text-xs text-gray-400 mt-1">{format(new Date(post.published_at), "dd/MM/yyyy", { locale: ptBR })}</p>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                  {post.fonte_nome && <p className="text-xs text-gray-400 font-medium">{post.fonte_nome}</p>}
+                  {post.published_at && (
+                    <p className="text-xs text-gray-400">{format(new Date(post.published_at), "dd/MM/yyyy", { locale: ptBR })}</p>
+                  )}
+                </div>
               </div>
             </Link>
           ))}

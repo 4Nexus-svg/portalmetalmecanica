@@ -31,9 +31,12 @@ export default function GridNoticias({ posts }: { posts: Post[] }) {
               </div>
               <h3 className="font-semibold text-gray-900 group-hover:text-[#1A2B4A] line-clamp-2 leading-tight">{post.title}</h3>
               {post.excerpt && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>}
-              {post.published_at && (
-                <p className="text-xs text-gray-400 mt-2">{format(new Date(post.published_at), "d 'de' MMMM", { locale: ptBR })}</p>
-              )}
+              <div className="flex items-center justify-between mt-2">
+                {post.fonte_nome && <p className="text-xs text-gray-400 font-medium">{post.fonte_nome}</p>}
+                {post.published_at && (
+                  <p className="text-xs text-gray-400">{format(new Date(post.published_at), "d 'de' MMMM", { locale: ptBR })}</p>
+                )}
+              </div>
             </div>
           </Link>
         ))}
