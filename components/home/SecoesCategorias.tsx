@@ -14,7 +14,7 @@ export default function SecoesCategorias({ secoes }: { secoes: Secao[] }) {
       {secoes.map((secao) => {
         if (secao.posts.length === 0) return null;
         return (
-          <section key={secao.category}>
+          <section key={secao.titulo}>
             <div className="bg-[#C9A84C] px-4 py-3 mb-4 rounded-sm">
               <h2 className="text-white font-black italic uppercase tracking-tight text-2xl md:text-3xl leading-none">
                 {secao.titulo}
