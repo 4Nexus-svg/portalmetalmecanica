@@ -24,7 +24,7 @@ const ORDEM_PADRAO: Pick<Bloco, "key" | "coluna" | "ordem" | "ativo">[] = [
   { key: "empresas_destaque", coluna: "full", ordem: 2, ativo: true },
   { key: "grid_noticias", coluna: "main", ordem: 0, ativo: true },
   { key: "banner_between", coluna: "main", ordem: 1, ativo: true },
-  { key: "mais_noticias", coluna: "main", ordem: 2, ativo: true },
+  { key: "mais_noticias", coluna: "after", ordem: 0, ativo: true },
   { key: "banner_sidebar", coluna: "sidebar", ordem: 0, ativo: true },
   { key: "mais_lidas", coluna: "sidebar", ordem: 1, ativo: true },
   { key: "newsletter", coluna: "sidebar", ordem: 2, ativo: true },
@@ -80,12 +80,13 @@ export default async function HomePage() {
     canais_regionais: <CanaisRegionais />,
   };
 
-  const porColuna = (col: "full" | "main" | "sidebar") =>
+  const porColuna = (col: string) =>
     ativos.filter((b) => b.coluna === col).sort((a, b) => a.ordem - b.ordem);
 
   const full = porColuna("full");
   const main = porColuna("main");
   const sidebar = porColuna("sidebar");
+  const after = porColuna("after");
 
   return (
     <>
@@ -93,7 +94,7 @@ export default async function HomePage() {
         {full.map((b) => <div key={b.key}>{COMPONENTES[b.key]}</div>)}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 pb-8">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           <div className="lg:col-span-2 space-y-8">
             {main.map((b) => <div key={b.key}>{COMPONENTES[b.key]}</div>)}
@@ -103,6 +104,12 @@ export default async function HomePage() {
           </aside>
         </div>
       </div>
+
+      {after.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 pb-8 mt-12">
+          {after.map((b) => <div key={b.key}>{COMPONENTES[b.key]}</div>)}
+        </div>
+      )}
     </>
   );
 }
