@@ -35,6 +35,7 @@ export default function Modal({
       <div
         className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {titulo && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
