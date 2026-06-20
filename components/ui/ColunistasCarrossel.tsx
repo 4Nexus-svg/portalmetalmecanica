@@ -9,6 +9,7 @@ type Colunista = {
   especialidade: string;
   iniciais: string;
   cor: string;
+  foto_url?: string | null;
 };
 
 export default function ColunistasCarrossel({ colunistas }: { colunistas: Colunista[] }) {
@@ -64,9 +65,12 @@ export default function ColunistasCarrossel({ colunistas }: { colunistas: Coluni
               className="group flex-shrink-0 flex flex-col items-center text-center px-5 py-3 hover:bg-gray-50 rounded-xl transition-colors min-w-[130px]"
             >
               {/* Avatar circular */}
-              <div className={`w-14 h-14 rounded-full ${col.cor} flex items-center justify-center mb-2 ring-2 ring-transparent group-hover:ring-[#C9A84C] transition-all`}>
-                <span className="text-white font-bold text-sm">{col.iniciais}</span>
-              </div>
+              {col.foto_url
+                ? <img src={col.foto_url} alt={col.nome} className="w-14 h-14 rounded-full object-cover mb-2 ring-2 ring-transparent group-hover:ring-[#C9A84C] transition-all" />
+                : <div className={`w-14 h-14 rounded-full ${col.cor} flex items-center justify-center mb-2 ring-2 ring-transparent group-hover:ring-[#C9A84C] transition-all`}>
+                    <span className="text-white font-bold text-sm">{col.iniciais}</span>
+                  </div>
+              }
 
               {/* Nome */}
               <p className="text-xs font-bold text-[#1A2B4A] group-hover:text-[#C9A84C] transition-colors leading-tight line-clamp-2">

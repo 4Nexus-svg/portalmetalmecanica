@@ -35,9 +35,12 @@ export default async function ColunistasPage() {
             <div key={col.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-14 h-14 rounded-full ${col.cor} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white font-bold text-lg">{col.iniciais}</span>
-                  </div>
+                  {col.foto_url
+                    ? <img src={col.foto_url} alt={col.nome} className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+                    : <div className={`w-14 h-14 rounded-full ${col.cor} flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-white font-bold text-lg">{col.iniciais}</span>
+                      </div>
+                  }
                   <div>
                     <h2 className="font-bold text-[#1A2B4A] text-lg leading-tight">{col.nome}</h2>
                     <p className="text-xs text-[#C9A84C] font-semibold mt-0.5">{col.especialidade}</p>
