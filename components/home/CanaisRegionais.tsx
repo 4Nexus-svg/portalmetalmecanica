@@ -4,19 +4,19 @@ const canais = [
   {
     label: "Espírito Santo",
     href: "/noticias/es",
-    bandeira: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Bandeira_do_Esp%C3%ADrito_Santo.svg/80px-Bandeira_do_Esp%C3%ADrito_Santo.svg.png",
+    bandeira: "/bandeiras/es.png",
     alt: "Bandeira do Espírito Santo",
   },
   {
     label: "Minas Gerais",
     href: "/noticias/mg",
-    bandeira: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Bandeira_de_Minas_Gerais.svg/80px-Bandeira_de_Minas_Gerais.svg.png",
+    bandeira: "/bandeiras/mg.png",
     alt: "Bandeira de Minas Gerais",
   },
   {
     label: "Brasil Industrial",
     href: "/noticias/brasil",
-    bandeira: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Flag_of_Brazil.svg/80px-Flag_of_Brazil.svg.png",
+    bandeira: "/bandeiras/br.png",
     alt: "Bandeira do Brasil",
   },
 ];
