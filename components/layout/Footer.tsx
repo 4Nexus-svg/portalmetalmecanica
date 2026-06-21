@@ -72,7 +72,11 @@ export default async function Footer() {
         <div>
           <h3 className="font-bold mb-4 text-[#C9A84C] uppercase tracking-wide text-sm">Contato</h3>
           <ul className="space-y-2 text-sm text-blue-200">
-            <li>{s.contact_email || "contato@portalmetalmecanica.com.br"}</li>
+            <li>
+              <a href={`mailto:${s.contact_email || "contato@portalmetalmecanica.com.br"}`} className="hover:text-white transition-colors">
+                {s.contact_email || "contato@portalmetalmecanica.com.br"}
+              </a>
+            </li>
             {s.contact_phone && <li>{s.contact_phone}</li>}
             <li>ES e MG — Brasil</li>
           </ul>
