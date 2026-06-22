@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { slugifyTitulo } from "@/lib/noticias/utils";
 import DataTable from "@/components/painel/DataTable";
 import Modal from "@/components/painel/Modal";
 import { FormField, Input, Textarea, Select } from "@/components/painel/FormField";
@@ -192,7 +193,7 @@ export default function ColunistasClient({
           <Input value={colForm.nome} onChange={(e) => setColForm((f) => ({ ...f, nome: e.target.value }))} />
         </FormField>
         <FormField label="Slug (vazio = gerar do nome)">
-          <Input value={colForm.slug} onChange={(e) => setColForm((f) => ({ ...f, slug: e.target.value }))} />
+          <Input value={colForm.slug} onChange={(e) => setColForm((f) => ({ ...f, slug: slugifyTitulo(e.target.value) }))} />
         </FormField>
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Cargo">
@@ -224,7 +225,7 @@ export default function ColunistasClient({
           <Input value={artForm.title} onChange={(e) => setArtForm((f) => ({ ...f, title: e.target.value }))} />
         </FormField>
         <FormField label="Slug (vazio = gerar do título)">
-          <Input value={artForm.slug} onChange={(e) => setArtForm((f) => ({ ...f, slug: e.target.value }))} />
+          <Input value={artForm.slug} onChange={(e) => setArtForm((f) => ({ ...f, slug: slugifyTitulo(e.target.value) }))} />
         </FormField>
         {ehGestor && (
           <FormField label="Colunista">

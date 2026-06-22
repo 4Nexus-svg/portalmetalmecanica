@@ -87,6 +87,7 @@ export async function criarArtigo(input: ArtigoInput) {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/painel/colunistas");
+  revalidatePath("/colunistas", "layout");
   revalidatePath("/artigos/" + slug);
 }
 
@@ -100,6 +101,7 @@ export async function atualizarArtigo(id: number, input: ArtigoInput) {
   }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/colunistas");
+  revalidatePath("/colunistas", "layout");
   revalidatePath("/artigos/" + input.slug);
 }
 
