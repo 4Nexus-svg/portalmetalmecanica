@@ -5,15 +5,17 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function MagicPage() {
   const [status, setStatus] = useState("Autenticando...");
+  // Captura o hash antes que o SDK do Supabase o limpe
+  const [isInvite] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.location.hash.includes("type=invite");
+  });
 
   useEffect(() => {
     const supabase = createClient();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-        // Convites chegam com type=invite no hash da URL
-        const hash = typeof window !== "undefined" ? window.location.hash : "";
-        const isInvite = hash.includes("type=invite");
         setStatus("Logado! Redirecionando...");
         window.location.href = isInvite ? "/auth/definir-senha" : "/painel";
       }
@@ -28,7 +30,7 @@ export default function MagicPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInvite]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
