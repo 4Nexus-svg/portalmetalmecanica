@@ -44,5 +44,4 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user", co
         .update({ profile_id: data.user.id }).eq("id", columnistId);
     }
   }
-  revalidatePath("/painel/usuarios");
 }
