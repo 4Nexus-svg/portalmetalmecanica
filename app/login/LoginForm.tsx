@@ -68,7 +68,14 @@ export default function LoginForm() {
               placeholder="seu@email.com" onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Senha</label>
+              {!isRegister && (
+                <Link href="/auth/recuperar-senha" className="text-xs text-[#1A2B4A] hover:underline">
+                  Esqueci minha senha
+                </Link>
+              )}
+            </div>
             <input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B4A]"
               placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
