@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPainelUser } from "@/lib/painel/auth";
 import { podeAcessar } from "@/lib/painel/permissions";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import SecaoHeader from "@/components/painel/SecaoHeader";
 import UsuariosClient from "./UsuariosClient";
 import type { Database } from "@/types/database";
@@ -15,9 +15,10 @@ export default async function UsuariosPage() {
   if (!podeAcessar(u.role, "usuarios")) redirect("/painel");
 
   const supabase = await createClient();
+  const svcClient = await createServiceClient();
   const { data: usuarios } = await supabase
     .from("profiles").select("*").order("created_at", { ascending: true }) as { data: Profile[] | null; error: unknown };
-  const { data: colunistasLivres } = await (supabase.from("columnists") as any)
+  const { data: colunistasLivres } = await (svcClient.from("columnists") as any)
     .select("id, nome").is("profile_id", null).order("nome") as { data: Pick<Colunista, "id" | "nome">[] | null; error: unknown };
 
   return (
