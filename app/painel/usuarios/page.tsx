@@ -16,8 +16,8 @@ export default async function UsuariosPage() {
 
   const supabase = await createClient();
   const [{ data: usuarios }, { data: colunistasLivres }] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: true }) as Promise<{ data: Profile[] | null }>,
-    (supabase.from("columnists") as any).select("id, nome").is("profile_id", null).order("nome") as Promise<{ data: Pick<Colunista, "id" | "nome">[] | null }>,
+    supabase.from("profiles").select("*").order("created_at", { ascending: true }) as unknown as Promise<{ data: Profile[] | null }>,
+    (supabase.from("columnists") as any).select("id, nome").is("profile_id", null).order("nome") as unknown as Promise<{ data: Pick<Colunista, "id" | "nome">[] | null }>,
   ]);
 
   return (
