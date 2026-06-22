@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import DataTable from "@/components/painel/DataTable";
 import Modal from "@/components/painel/Modal";
 import { FormField, Input, Select } from "@/components/painel/FormField";
-import { alterarPapel, convidarUsuario, type PapelDB } from "./actions";
+import { alterarPapel, convidarUsuario, excluirUsuario, type PapelDB } from "./actions";
 import type { Database } from "@/types/database";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -19,6 +19,7 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
   const [email, setEmail] = useState("");
   const [papel, setPapel] = useState<PapelDB>("editor");
   const [enviando, setEnviando] = useState(false);
+  const [excluindo, setExcluindo] = useState<string | null>(null);
 
   async function trocar(userId: string, papel: PapelDB) {
     try {
@@ -27,6 +28,18 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro");
+    }
+  }
+
+  async function confirmarExclusao(userId: string) {
+    try {
+      await excluirUsuario(userId);
+      toast.success("Usuário excluído");
+      setExcluindo(null);
+      router.refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao excluir");
+      setExcluindo(null);
     }
   }
 
@@ -67,8 +80,30 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
               </Select>
             ),
           },
+          {
+            chave: "id", titulo: "", render: (p) => p.id === meuId ? null : (
+              <button
+                onClick={() => setExcluindo(p.id)}
+                className="text-red-600 hover:text-red-800 text-sm font-medium"
+              >
+                Excluir
+              </button>
+            ),
+          },
         ]}
       />
+
+      <Modal aberto={!!excluindo} titulo="Confirmar exclusão" onFechar={() => setExcluindo(null)}>
+        <p className="text-sm text-gray-700 mb-4">Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.</p>
+        <div className="flex gap-3">
+          <button onClick={() => setExcluindo(null)} className="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-50 text-sm">
+            Cancelar
+          </button>
+          <button onClick={() => excluindo && confirmarExclusao(excluindo)} className="flex-1 bg-red-600 text-white font-semibold py-2.5 rounded-lg hover:bg-red-700 text-sm">
+            Excluir
+          </button>
+        </div>
+      </Modal>
 
       <Modal aberto={convite} titulo="Convidar usuário" onFechar={() => setConvite(false)}>
         <FormField label="E-mail">

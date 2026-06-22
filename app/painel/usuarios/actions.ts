@@ -16,6 +16,16 @@ export async function alterarPapel(userId: string, papel: PapelDB) {
   revalidatePath("/painel/usuarios");
 }
 
+export async function excluirUsuario(userId: string) {
+  const { role, userId: meuId } = await exigirSecao("usuarios");
+  if (role !== "admin") throw new Error("Não autorizado");
+  if (userId === meuId) throw new Error("Você não pode excluir o próprio usuário.");
+  const supabase = await createServiceClient();
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/painel/usuarios");
+}
+
 export async function convidarUsuario(email: string, papel: PapelDB = "user") {
   const u = await getPainelUser();
   if (!u || u.role !== "admin") throw new Error("Não autorizado");
