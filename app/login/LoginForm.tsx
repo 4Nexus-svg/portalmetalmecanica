@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const next = searchParams.get("next") ?? "/painel";
   const [loading, setLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", name: "" });
