@@ -15,10 +15,10 @@ export default async function UsuariosPage() {
   if (!podeAcessar(u.role, "usuarios")) redirect("/painel");
 
   const supabase = await createClient();
-  const [{ data: usuarios }, { data: colunistasLivres }] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: true }) as unknown as Promise<{ data: Profile[] | null }>,
-    (supabase.from("columnists") as any).select("id, nome").is("profile_id", null).order("nome") as unknown as Promise<{ data: Pick<Colunista, "id" | "nome">[] | null }>,
-  ]);
+  const { data: usuarios } = await supabase
+    .from("profiles").select("*").order("created_at", { ascending: true }) as { data: Profile[] | null; error: unknown };
+  const { data: colunistasLivres } = await (supabase.from("columnists") as any)
+    .select("id, nome").is("profile_id", null).order("nome") as { data: Pick<Colunista, "id" | "nome">[] | null; error: unknown };
 
   return (
     <div>
