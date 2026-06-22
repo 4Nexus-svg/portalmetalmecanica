@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import DataTable from "@/components/painel/DataTable";
 import Modal from "@/components/painel/Modal";
 import { FormField, Input, Select } from "@/components/painel/FormField";
-import { alterarPapel, convidarUsuario, excluirUsuario, type PapelDB } from "./actions";
+import { alterarPapel, convidarUsuario, excluirUsuario, buscarColunistasLivres, type PapelDB } from "./actions";
 import type { Database } from "@/types/database";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -15,14 +15,19 @@ const PAPEIS: PapelDB[] = ["admin", "editor", "comercial", "colunista", "user"];
 
 type ColunistaLivre = { id: number; nome: string };
 
-export default function UsuariosClient({ usuarios, meuId, colunistasLivres }: { usuarios: Profile[]; meuId: string; colunistasLivres: ColunistaLivre[] }) {
+export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[]; meuId: string }) {
   const router = useRouter();
   const [convite, setConvite] = useState(false);
   const [email, setEmail] = useState("");
   const [papel, setPapel] = useState<PapelDB>("editor");
   const [columnistId, setColumnistId] = useState<number | null>(null);
+  const [colunistasLivres, setColunistasLivres] = useState<ColunistaLivre[]>([]);
   const [enviando, setEnviando] = useState(false);
   const [excluindo, setExcluindo] = useState<string | null>(null);
+
+  useEffect(() => {
+    buscarColunistasLivres().then(setColunistasLivres).catch(() => {});
+  }, []);
 
   async function trocar(userId: string, papel: PapelDB) {
     try {
@@ -55,6 +60,7 @@ export default function UsuariosClient({ usuarios, meuId, colunistasLivres }: { 
       setEmail("");
       setPapel("editor");
       setColumnistId(null);
+      buscarColunistasLivres().then(setColunistasLivres).catch(() => {});
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao convidar");
