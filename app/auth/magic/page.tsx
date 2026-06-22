@@ -23,7 +23,7 @@ export default function MagicPage() {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        window.location.href = "/painel";
+        window.location.href = isInvite ? "/auth/definir-senha" : "/painel";
       } else {
         setStatus("Link inválido ou expirado. Solicite um novo.");
       }
