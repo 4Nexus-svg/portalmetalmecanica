@@ -45,5 +45,4 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user", co
     }
   }
   revalidatePath("/painel/usuarios");
-  revalidatePath("/painel/colunistas");
 }
