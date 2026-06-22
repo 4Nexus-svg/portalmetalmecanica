@@ -54,7 +54,11 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
   async function convidar() {
     setEnviando(true);
     try {
-      await convidarUsuario(email, papel, columnistId);
+      const result = await convidarUsuario(email, papel, columnistId);
+      if (result?.erro) {
+        toast.error(result.erro);
+        return;
+      }
       toast.success("Convite enviado");
       setConvite(false);
       setEmail("");

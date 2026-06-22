@@ -34,16 +34,20 @@ export async function excluirUsuario(userId: string) {
   revalidatePath("/painel/usuarios");
 }
 
-export async function convidarUsuario(email: string, papel: PapelDB = "user", columnistId?: number | null) {
+export async function convidarUsuario(
+  email: string,
+  papel: PapelDB = "user",
+  columnistId?: number | null
+): Promise<{ erro?: string }> {
   const u = await getPainelUser();
-  if (!u || u.role !== "admin") throw new Error("Não autorizado");
-  if (!email) throw new Error("Informe um e-mail");
+  if (!u || u.role !== "admin") return { erro: "Não autorizado" };
+  if (!email) return { erro: "Informe um e-mail" };
   const supabase = await createServiceClient();
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://portalmetalmecanica.vercel.app";
   const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
     redirectTo: `${siteUrl}/auth/magic`,
   });
-  if (error) throw new Error(error.message);
+  if (error) return { erro: error.message };
   if (data?.user?.id) {
     await (supabase.from("profiles") as any)
       .upsert({ id: data.user.id, email, role: papel }, { onConflict: "id" });
@@ -52,4 +56,5 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user", co
         .update({ profile_id: data.user.id }).eq("id", columnistId);
     }
   }
+  return {};
 }
