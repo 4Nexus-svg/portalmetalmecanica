@@ -9,18 +9,16 @@ export default function MagicPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    // O createBrowserClient do @supabase/ssr detecta o hash automaticamente
-    // via onAuthStateChange quando há #access_token na URL
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+        // Convites chegam com type=invite no hash da URL
+        const hash = typeof window !== "undefined" ? window.location.hash : "";
+        const isInvite = hash.includes("type=invite");
         setStatus("Logado! Redirecionando...");
-        window.location.href = "/painel";
-      } else if (event === "TOKEN_REFRESHED") {
-        window.location.href = "/painel";
+        window.location.href = isInvite ? "/auth/definir-senha" : "/painel";
       }
     });
 
-    // Fallback: tenta pegar a sessão atual (caso já tenha sido processada)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         window.location.href = "/painel";
