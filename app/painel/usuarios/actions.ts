@@ -26,7 +26,7 @@ export async function excluirUsuario(userId: string) {
   revalidatePath("/painel/usuarios");
 }
 
-export async function convidarUsuario(email: string, papel: PapelDB = "user") {
+export async function convidarUsuario(email: string, papel: PapelDB = "user", columnistId?: number | null) {
   const u = await getPainelUser();
   if (!u || u.role !== "admin") throw new Error("Não autorizado");
   if (!email) throw new Error("Informe um e-mail");
@@ -36,11 +36,14 @@ export async function convidarUsuario(email: string, papel: PapelDB = "user") {
     redirectTo: `${siteUrl}/auth/magic`,
   });
   if (error) throw new Error(error.message);
-  // Upsert garante que o perfil existe com o papel correto,
-  // independente do timing do trigger on_auth_user_created
   if (data?.user?.id) {
     await (supabase.from("profiles") as any)
       .upsert({ id: data.user.id, email, role: papel }, { onConflict: "id" });
+    if (columnistId) {
+      await (supabase.from("columnists") as any)
+        .update({ profile_id: data.user.id }).eq("id", columnistId);
+    }
   }
   revalidatePath("/painel/usuarios");
+  revalidatePath("/painel/colunistas");
 }

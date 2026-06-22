@@ -13,11 +13,14 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 const PAPEIS: PapelDB[] = ["admin", "editor", "comercial", "colunista", "user"];
 
-export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[]; meuId: string }) {
+type ColunistaLivre = { id: number; nome: string };
+
+export default function UsuariosClient({ usuarios, meuId, colunistasLivres }: { usuarios: Profile[]; meuId: string; colunistasLivres: ColunistaLivre[] }) {
   const router = useRouter();
   const [convite, setConvite] = useState(false);
   const [email, setEmail] = useState("");
   const [papel, setPapel] = useState<PapelDB>("editor");
+  const [columnistId, setColumnistId] = useState<number | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [excluindo, setExcluindo] = useState<string | null>(null);
 
@@ -46,11 +49,12 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
   async function convidar() {
     setEnviando(true);
     try {
-      await convidarUsuario(email, papel);
+      await convidarUsuario(email, papel, columnistId);
       toast.success("Convite enviado");
       setConvite(false);
       setEmail("");
       setPapel("editor");
+      setColumnistId(null);
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao convidar");
@@ -110,10 +114,18 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="pessoa@empresa.com" />
         </FormField>
         <FormField label="Papel">
-          <Select value={papel} onChange={(e) => setPapel(e.target.value as PapelDB)}>
+          <Select value={papel} onChange={(e) => { setPapel(e.target.value as PapelDB); if (e.target.value !== "colunista") setColumnistId(null); }}>
             {PAPEIS.filter(p => p !== "user").map((r) => <option key={r} value={r}>{r}</option>)}
           </Select>
         </FormField>
+        {papel === "colunista" && colunistasLivres.length > 0 && (
+          <FormField label="Vincular ao colunista existente (opcional)">
+            <Select value={columnistId ?? ""} onChange={(e) => setColumnistId(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">— Não vincular agora —</option>
+              {colunistasLivres.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </Select>
+          </FormField>
+        )}
         <button onClick={convidar} disabled={enviando} className="w-full bg-[#1A2B4A] text-white font-semibold py-2.5 rounded-lg hover:bg-[#0f1e35] disabled:opacity-50">
           {enviando ? "Enviando..." : "Enviar convite"}
         </button>
