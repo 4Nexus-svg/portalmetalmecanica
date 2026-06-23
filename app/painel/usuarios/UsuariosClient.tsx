@@ -15,7 +15,7 @@ const PAPEIS: PapelDB[] = ["admin", "editor", "comercial", "colunista", "user"];
 
 type ColunistaLivre = { id: number; nome: string };
 
-export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[]; meuId: string }) {
+export default function UsuariosClient({ usuarios, meuId, nomeColunista }: { usuarios: Profile[]; meuId: string; nomeColunista: Record<string, string> }) {
   const router = useRouter();
   const [convite, setConvite] = useState(false);
   const [email, setEmail] = useState("");
@@ -85,7 +85,7 @@ export default function UsuariosClient({ usuarios, meuId }: { usuarios: Profile[
         dados={usuarios}
         vazio="Nenhum usuário."
         colunas={[
-          { chave: "name", titulo: "Nome", render: (p) => p.name ?? "—" },
+          { chave: "name", titulo: "Nome", render: (p) => p.name ?? nomeColunista[p.id] ?? "—" },
           { chave: "email", titulo: "E-mail", render: (p) => p.email ?? "—" },
           {
             chave: "role", titulo: "Papel", render: (p) => (

@@ -14,13 +14,20 @@ export default async function UsuariosPage() {
   if (!podeAcessar(u.role, "usuarios")) redirect("/painel");
 
   const supabase = await createClient();
-  const { data: usuarios } = await supabase
-    .from("profiles").select("*").order("created_at", { ascending: true }) as { data: Profile[] | null; error: unknown };
+  const [{ data: usuarios }, { data: colunistas }] = await Promise.all([
+    supabase.from("profiles").select("*").order("created_at", { ascending: true }) as unknown as Promise<{ data: Profile[] | null; error: unknown }>,
+    (supabase.from("columnists") as any).select("profile_id, nome").not("profile_id", "is", null),
+  ]);
+
+  const nomeColunista: Record<string, string> = {};
+  for (const c of colunistas ?? []) {
+    if (c.profile_id) nomeColunista[c.profile_id] = c.nome;
+  }
 
   return (
     <div>
       <SecaoHeader titulo="Usuários" descricao="Usuários e papéis de acesso ao painel." />
-      <UsuariosClient usuarios={usuarios ?? []} meuId={u.userId} />
+      <UsuariosClient usuarios={usuarios ?? []} meuId={u.userId} nomeColunista={nomeColunista} />
     </div>
   );
 }
