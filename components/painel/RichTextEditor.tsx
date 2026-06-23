@@ -24,7 +24,7 @@ export default function RichTextEditor({
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none min-h-[200px] px-4 py-3 focus:outline-none",
+        class: "min-h-[200px] px-4 py-3 focus:outline-none",
       },
     },
   });
@@ -98,7 +98,9 @@ export default function RichTextEditor({
       </div>
 
       {/* Área de edição */}
-      <EditorContent editor={editor} />
+      <div className="prose prose-sm max-w-none [&_.ProseMirror]:min-h-[200px] [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:outline-none">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
