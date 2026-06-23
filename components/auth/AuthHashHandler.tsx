@@ -19,9 +19,10 @@ export default function AuthHashHandler() {
     if (!accessToken || !refreshToken) return;
 
     const supabase = createClient();
+    const type = params.get("type");
     supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
       if (!error) {
-        window.location.href = "/painel";
+        window.location.href = type === "invite" ? "/auth/definir-senha" : "/painel";
       }
     });
   }, []);
