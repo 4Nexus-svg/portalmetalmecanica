@@ -45,7 +45,7 @@ export async function convidarUsuario(
   const supabase = await createServiceClient();
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://portalmetalmecanica.vercel.app";
   const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${siteUrl}/auth/callback?next=/auth/definir-senha`,
+    redirectTo: `${siteUrl}/auth/magic?invite=1`,
   });
   if (error) return { erro: error.message };
   if (data?.user?.id) {
