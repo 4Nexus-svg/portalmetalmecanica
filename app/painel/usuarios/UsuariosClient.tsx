@@ -87,6 +87,7 @@ export default function UsuariosClient({ usuarios, meuId, nomeColunista }: { usu
         colunas={[
           { chave: "name", titulo: "Nome", render: (p) => p.name ?? nomeColunista[p.id] ?? "—" },
           { chave: "email", titulo: "E-mail", render: (p) => p.email ?? "—" },
+          { chave: "id", titulo: "Colunista vinculado", render: (p) => nomeColunista[p.id] ?? <span className="text-gray-400 text-xs">—</span> },
           {
             chave: "role", titulo: "Papel", render: (p) => (
               <Select value={p.role} onChange={(e) => trocar(p.id, e.target.value as PapelDB)}>
