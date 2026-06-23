@@ -17,7 +17,16 @@ const ALLOWED_ATTRIBUTES: sanitizeHtml.IOptions["allowedAttributes"] = {
   "*": ["class"],
 };
 
-export function sanitizeContent(html: string): string {
+function plainTextToHtml(text: string): string {
+  return text
+    .split(/\n\n+/)
+    .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+export function sanitizeContent(raw: string): string {
+  // Se não contém nenhuma tag HTML, trata como texto puro
+  const html = /<[a-z][\s\S]*>/i.test(raw) ? raw : plainTextToHtml(raw);
   return sanitizeHtml(html, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: ALLOWED_ATTRIBUTES,
