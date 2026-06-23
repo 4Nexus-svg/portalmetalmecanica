@@ -8,6 +8,7 @@ import DataTable from "@/components/painel/DataTable";
 import Modal from "@/components/painel/Modal";
 import { FormField, Input, Textarea, Select } from "@/components/painel/FormField";
 import ImageUpload from "@/components/painel/ImageUpload";
+import RichTextEditor from "@/components/painel/RichTextEditor";
 import Badge from "@/components/painel/Badge";
 import {
   criarColunista, atualizarColunista, excluirColunista,
@@ -237,8 +238,8 @@ export default function ColunistasClient({
         <FormField label="Resumo">
           <Textarea rows={2} value={artForm.excerpt ?? ""} onChange={(e) => setArtForm((f) => ({ ...f, excerpt: e.target.value || null }))} />
         </FormField>
-        <FormField label="Conteúdo (HTML)">
-          <Textarea rows={8} value={artForm.content ?? ""} onChange={(e) => setArtForm((f) => ({ ...f, content: e.target.value || null }))} />
+        <FormField label="Conteúdo">
+          <RichTextEditor value={artForm.content} onChange={(html) => setArtForm((f) => ({ ...f, content: html || null }))} />
         </FormField>
         <label className="flex items-center gap-2 mb-4 text-sm">
           <input type="checkbox" checked={artForm.publicar} onChange={(e) => setArtForm((f) => ({ ...f, publicar: e.target.checked }))} />
