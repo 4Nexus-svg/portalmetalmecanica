@@ -79,7 +79,7 @@ export default async function LicitacoesPage({ searchParams }: Props) {
         </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://pncp.gov.br/app/editais?uf=ES"
+            href="https://pncp.gov.br/app/editais?ufs=ES&status=recebendo_proposta"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#1A2B4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0f1e35] transition-colors"
@@ -87,7 +87,7 @@ export default async function LicitacoesPage({ searchParams }: Props) {
             Licitações no ES →
           </a>
           <a
-            href="https://pncp.gov.br/app/editais?uf=MG"
+            href="https://pncp.gov.br/app/editais?ufs=MG&status=recebendo_proposta"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-[#1A2B4A] text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#0f1e35] transition-colors"
@@ -95,7 +95,7 @@ export default async function LicitacoesPage({ searchParams }: Props) {
             Licitações em MG →
           </a>
           <a
-            href="https://pncp.gov.br/app/editais"
+            href="https://pncp.gov.br/app/editais?status=recebendo_proposta"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 border border-[#1A2B4A] text-[#1A2B4A] text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[#1A2B4A]/5 transition-colors"
