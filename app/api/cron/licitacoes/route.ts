@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 const PNCP_CONSULTA = 'https://pncp.gov.br/api/consulta/v1';
 const PAGE_SIZE = 50;
 const UFS = ['ES', 'MG'] as const;
+// Códigos de modalidade do PNCP (1–13); codigoModalidadeContratacao passou a ser obrigatório
+const MODALIDADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const;
 
 const PALAVRAS_METALMEC = [
   'aço', 'aco', 'alumínio', 'aluminio', 'cobre', 'ferro', 'metal', 'metalúrgi', 'metalurgi',
@@ -15,9 +17,10 @@ const PALAVRAS_METALMEC = [
 ];
 
 interface PncpContratacao {
-  orgaoEntidade: { cnpj: string; razaoSocial: string; ufSigla: string };
-  objeto: string;
-  modalidadeName: string;
+  orgaoEntidade: { cnpj: string; razaoSocial: string };
+  unidadeOrgao: { ufSigla: string };
+  objetoCompra: string;
+  modalidadeNome: string;
   valorTotalEstimado: number | null;
   dataPublicacaoPncp: string;
   dataEncerramentoProposta: string | null;
@@ -51,12 +54,14 @@ function calcStatus(dataEncerramento: string | null): 'aberta' | 'encerrada' {
 
 async function fetchPagina(
   uf: string,
+  modalidade: number,
   dataInicial: string,
   dataFinal: string,
   pagina: number,
 ): Promise<PncpPage> {
   const params = new URLSearchParams({
     uf,
+    codigoModalidadeContratacao: String(modalidade),
     dataInicial,
     dataFinal,
     pagina: String(pagina),
@@ -65,7 +70,7 @@ async function fetchPagina(
   const res = await fetch(`${PNCP_CONSULTA}/contratacoes/publicacao?${params}`, {
     signal: AbortSignal.timeout(55_000),
   });
-  if (!res.ok) throw new Error(`PNCP ${uf} p${pagina}: HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`PNCP ${uf} mod${modalidade} p${pagina}: HTTP ${res.status}`);
   return res.json() as Promise<PncpPage>;
 }
 
@@ -85,46 +90,48 @@ async function executarSync() {
   let erros = 0;
 
   for (const uf of UFS) {
-    let pagina = 1;
-    let totalPaginas = 1;
+    for (const modalidade of MODALIDADES) {
+      let pagina = 1;
+      let totalPaginas = 1;
 
-    while (pagina <= totalPaginas) {
-      try {
-        const page = await fetchPagina(uf, dataInicial, dataFinal, pagina);
-        if (page.empty || !page.data?.length) break;
-        totalPaginas = page.totalPaginas ?? 1;
+      while (pagina <= totalPaginas) {
+        try {
+          const page = await fetchPagina(uf, modalidade, dataInicial, dataFinal, pagina);
+          if (page.empty || !page.data?.length) break;
+          totalPaginas = page.totalPaginas ?? 1;
 
-        const filtradas = page.data.filter((c) => isMetalmec(c.objeto ?? ''));
-        totalFiltradas += filtradas.length;
+          const filtradas = page.data.filter((c) => isMetalmec(c.objetoCompra ?? ''));
+          totalFiltradas += filtradas.length;
 
-        const registros = filtradas.map((c) => ({
-          id: `${c.orgaoEntidade.cnpj}-${c.anoCompra}-${c.sequencialCompra}`,
-          orgao_cnpj: c.orgaoEntidade.cnpj,
-          orgao_nome: c.orgaoEntidade.razaoSocial ?? null,
-          uf: c.orgaoEntidade.ufSigla ?? uf,
-          objeto: c.objeto ?? null,
-          modalidade: c.modalidadeName ?? null,
-          valor_estimado: c.valorTotalEstimado ?? null,
-          data_publicacao: c.dataPublicacaoPncp?.slice(0, 10) ?? null,
-          data_encerramento: c.dataEncerramentoProposta?.slice(0, 10) ?? null,
-          status: calcStatus(c.dataEncerramentoProposta),
-          link_pncp: c.linkSistemaOrigem ?? null,
-          updated_at: new Date().toISOString(),
-        }));
+          const registros = filtradas.map((c) => ({
+            id: `${c.orgaoEntidade.cnpj}-${c.anoCompra}-${c.sequencialCompra}`,
+            orgao_cnpj: c.orgaoEntidade.cnpj,
+            orgao_nome: c.orgaoEntidade.razaoSocial ?? null,
+            uf: c.unidadeOrgao?.ufSigla ?? uf,
+            objeto: c.objetoCompra ?? null,
+            modalidade: c.modalidadeNome ?? null,
+            valor_estimado: c.valorTotalEstimado ?? null,
+            data_publicacao: c.dataPublicacaoPncp?.slice(0, 10) ?? null,
+            data_encerramento: c.dataEncerramentoProposta?.slice(0, 10) ?? null,
+            status: calcStatus(c.dataEncerramentoProposta),
+            link_pncp: c.linkSistemaOrigem ?? null,
+            updated_at: new Date().toISOString(),
+          }));
 
-        if (registros.length > 0) {
-          const { error } = await supabase
-            .from('licitacoes_pncp')
-            .upsert(registros, { onConflict: 'id' });
-          if (error) { console.error('[licitacoes] upsert erro:', error.message); erros++; }
-          else upsertados += registros.length;
+          if (registros.length > 0) {
+            const { error } = await supabase
+              .from('licitacoes_pncp')
+              .upsert(registros, { onConflict: 'id' });
+            if (error) { console.error('[licitacoes] upsert erro:', error.message); erros++; }
+            else upsertados += registros.length;
+          }
+        } catch (err) {
+          console.error(`[licitacoes] erro uf=${uf} mod=${modalidade} p=${pagina}:`, err);
+          erros++;
+          break;
         }
-      } catch (err) {
-        console.error(`[licitacoes] erro uf=${uf} p=${pagina}:`, err);
-        erros++;
-        break;
+        pagina++;
       }
-      pagina++;
     }
   }
 
