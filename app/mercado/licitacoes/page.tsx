@@ -50,8 +50,12 @@ export default async function LicitacoesPage({ searchParams }: Props) {
   if (uf)     query = query.eq('uf', uf.toUpperCase());
   if (status) query = query.eq('status', status);
 
-  const { data: licitacoes } = await query;
+  const [{ data: licitacoes }, { count: totalCount }] = await Promise.all([
+    query,
+    supabase.from('licitacoes_pncp').select('*', { count: 'exact', head: true }),
+  ]);
 
+  const temDados = (totalCount ?? 0) > 0;
   const ufAtual     = uf?.toUpperCase();
   const statusAtual = status;
 
@@ -106,7 +110,7 @@ export default async function LicitacoesPage({ searchParams }: Props) {
       </div>
 
       {/* Separador curadoria */}
-      {licitacoes && licitacoes.length > 0 && (
+      {temDados && (
         <div className="flex items-center gap-3 mb-5">
           <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
             Selecionadas pela redação
@@ -115,8 +119,8 @@ export default async function LicitacoesPage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* Filtros — só exibe se há itens */}
-      <div className={`flex flex-wrap gap-2 mb-6 ${!licitacoes?.length ? 'hidden' : ''}`}>
+      {/* Filtros — exibe sempre que há dados na tabela */}
+      <div className={`flex flex-wrap gap-2 mb-6 ${!temDados ? 'hidden' : ''}`}>
         {[
           { label: 'Todos os estados', u: undefined },
           { label: 'Espírito Santo',   u: 'ES' },
