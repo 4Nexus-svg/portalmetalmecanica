@@ -7,6 +7,8 @@ import DataTable from "@/components/painel/DataTable";
 import Modal from "@/components/painel/Modal";
 import { FormField, Input, Textarea } from "@/components/painel/FormField";
 import Badge from "@/components/painel/Badge";
+import ImageUpload from "@/components/painel/ImageUpload";
+import RichTextEditor from "@/components/painel/RichTextEditor";
 import { criarPost, atualizarPost, excluirPost, type PostInput } from "./actions";
 import type { Database } from "@/types/database";
 
@@ -208,12 +210,10 @@ export default function NoticiasClient({ itens }: { itens: Post[] }) {
                 />
               </FormField>
 
-              <FormField label="Conteúdo (HTML)">
-                <Textarea
-                  rows={10}
-                  value={form.content ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, content: e.target.value || null }))}
-                  placeholder="<p>Conteúdo da notícia...</p>"
+              <FormField label="Conteúdo">
+                <RichTextEditor
+                  value={form.content}
+                  onChange={(html) => setForm((f) => ({ ...f, content: html || null }))}
                 />
               </FormField>
 
@@ -239,13 +239,11 @@ export default function NoticiasClient({ itens }: { itens: Post[] }) {
                 </FormField>
               </div>
 
-              <FormField label="Imagem destacada (URL)">
-                <Input
-                  value={form.featured_image ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, featured_image: e.target.value || null }))}
-                  placeholder="https://..."
-                />
-              </FormField>
+              <ImageUpload
+                label="Imagem destacada"
+                valor={form.featured_image}
+                onChange={(url) => setForm((f) => ({ ...f, featured_image: url }))}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Data de publicação">
