@@ -20,6 +20,7 @@ const DESCRICAO: Record<Secao, string> = {
   configuracoes: "Configurações gerais do portal.",
   usuarios:      "Usuários e papéis de acesso ao painel.",
   licitacoes:    "Licitações públicas do setor metalmecânico.",
+  noticias:      "Notícias do setor metalmecânico.",
 };
 
 export default async function StubPage({ secao }: { secao: Secao }) {
