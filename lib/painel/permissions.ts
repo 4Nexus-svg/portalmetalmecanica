@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard, Megaphone, Tag, BookOpen, Briefcase,
-  CalendarDays, PenLine, Star, Home, Settings, Users,
+  CalendarDays, PenLine, Star, Home, Settings, Users, Newspaper,
 } from "lucide-react";
 
 export type Role = "admin" | "editor" | "comercial" | "colunista";
@@ -9,11 +9,11 @@ export type Role = "admin" | "editor" | "comercial" | "colunista";
 export type Secao =
   | "dashboard" | "publicidade" | "classificados" | "guia"
   | "vagas" | "eventos" | "colunistas" | "destaques"
-  | "home" | "configuracoes" | "usuarios" | "licitacoes";
+  | "home" | "configuracoes" | "usuarios" | "licitacoes" | "noticias";
 
 const ACESSO: Record<Role, Secao[]> = {
-  admin:     ["dashboard", "publicidade", "classificados", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "configuracoes", "usuarios", "licitacoes"],
-  editor:    ["dashboard", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "licitacoes"],
+  admin:     ["dashboard", "noticias", "publicidade", "classificados", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "configuracoes", "usuarios", "licitacoes"],
+  editor:    ["dashboard", "noticias", "guia", "vagas", "eventos", "colunistas", "destaques", "home", "licitacoes"],
   comercial: ["dashboard", "publicidade", "classificados", "destaques"],
   colunista: ["dashboard", "colunistas"],
 };
@@ -53,6 +53,7 @@ export const SECOES_META: Record<Secao, SecaoMeta> = {
   configuracoes: { label: "Configurações",   rota: "/painel/configuracoes",  icone: Settings,        fase: 3 },
   usuarios:      { label: "Usuários",        rota: "/painel/usuarios",       icone: Users,           fase: 3 },
   licitacoes:    { label: "Licitações",      rota: "/painel/licitacoes",     icone: Briefcase,       fase: 3 },
+  noticias:      { label: "Notícias",        rota: "/painel/noticias",       icone: Newspaper,       fase: 2 },
 };
 
 /** Converte o role do banco (5 valores) num Role de painel, ou null se não acessa o painel. */
