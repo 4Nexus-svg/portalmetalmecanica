@@ -46,9 +46,15 @@ ${contexto}`;
   }
 
   // ── Chamada 2: artigo completo (HTML direto) ──────────────────────────────
-  const conteudo = await safeRun(
-    async () => {
-      const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
+  // Também sem fallback: publicar um artigo de 1 frase (só o resumo) é
+  // enganoso pro leitor. Se a IA falhar aqui, aborta e deixa o cron tentar
+  // de novo depois (tentativas:2 com pequeno atraso já ajuda em falhas
+  // passageiras de rate-limit por concorrência).
+  let conteudo: string;
+  try {
+    conteudo = await safeRun(
+      async () => {
+        const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
 
 Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguagem profissional e objetiva.
 
@@ -63,16 +69,15 @@ INSTRUÇÕES:
 NOTÍCIA:
 ${contexto}`;
 
-      const html = await generateText(prompt);
-      const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
-      return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
-    },
-    {
-      timeout: 120000,
-      tentativas: 1,
-      fallback: `<p>${metadados.resumo}</p>`,
-    }
-  );
+        const html = await generateText(prompt);
+        const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+        return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
+      },
+      { timeout: 60000, tentativas: 2, delayBase: 5000 }
+    );
+  } catch {
+    throw new Error(`IA indisponível (artigo completo) para: ${item.titulo}`);
+  }
 
   return {
     titulo: (metadados.titulo || item.titulo).slice(0, 90),
@@ -112,9 +117,11 @@ ${contextoFontes}`;
     throw new Error(`IA indisponível (todos os provedores falharam) para: ${itens[0].titulo}`);
   }
 
-  const conteudo = await safeRun(
-    async () => {
-      const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro.
+  let conteudo: string;
+  try {
+    conteudo = await safeRun(
+      async () => {
+        const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro.
 
 As ${itens.length} fontes abaixo cobrem o MESMO evento de perspectivas complementares: ${fontesList}.
 
@@ -128,16 +135,15 @@ Escreva uma matéria jornalística ORIGINAL unindo as informações das fontes. 
 
 ${contextoFontes}`;
 
-      const html = await generateText(prompt);
-      const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
-      return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
-    },
-    {
-      timeout: 120000,
-      tentativas: 1,
-      fallback: `<p>${metadados.resumo}</p><p><em>Fontes: ${fontesList}.</em></p>`,
-    }
-  );
+        const html = await generateText(prompt);
+        const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+        return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
+      },
+      { timeout: 60000, tentativas: 2, delayBase: 5000 }
+    );
+  } catch {
+    throw new Error(`IA indisponível (artigo completo) para: ${itens[0].titulo}`);
+  }
 
   return {
     titulo: (metadados.titulo || itens[0].titulo).slice(0, 90),

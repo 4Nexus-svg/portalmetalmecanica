@@ -117,7 +117,7 @@ async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPi
           }
         }
       },
-      3
+      2
     );
     // Extração de eventos das notícias coletadas
     if (!dry) {
