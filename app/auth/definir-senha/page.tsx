@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function DefinirSenhaPage() {
   const router = useRouter();
@@ -38,22 +39,18 @@ export default function DefinirSenhaPage() {
         <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nova senha</label>
-            <input
-              type="password"
+            <PasswordInput
               value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B4A]"
+              onChange={setSenha}
               placeholder="Mínimo 8 caracteres"
               onKeyDown={(e) => e.key === "Enter" && definir()}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
-            <input
-              type="password"
+            <PasswordInput
               value={confirmacao}
-              onChange={(e) => setConfirmacao(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B4A]"
+              onChange={setConfirmacao}
               placeholder="Repita a senha"
               onKeyDown={(e) => e.key === "Enter" && definir()}
             />

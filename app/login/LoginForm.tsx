@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -76,8 +77,7 @@ export default function LoginForm() {
                 </Link>
               )}
             </div>
-            <input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B4A]"
+            <PasswordInput value={form.password} onChange={(v) => setForm((f) => ({ ...f, password: v }))}
               placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
           </div>
           <button onClick={handleSubmit} disabled={loading}
