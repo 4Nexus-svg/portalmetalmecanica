@@ -9,6 +9,7 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import sharp from 'sharp';
 
 const SUPABASE_URL = 'https://nsixodvejuhnsofpavvc.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -126,12 +127,12 @@ async function baixarEHospedar(url) {
   const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'image/*' }, signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const contentType = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase() ?? '';
-  const ext = EXTENSAO_POR_MIME[contentType];
-  if (!ext) throw new Error(`content-type inesperado: ${contentType || '(vazio)'}`);
-  const buffer = Buffer.from(await res.arrayBuffer());
-  if (buffer.byteLength === 0) throw new Error('corpo vazio');
-  const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage.from('painel').upload(path, buffer, { contentType });
+  if (!EXTENSAO_POR_MIME[contentType]) throw new Error(`content-type inesperado: ${contentType || '(vazio)'}`);
+  const original = Buffer.from(await res.arrayBuffer());
+  if (original.byteLength === 0) throw new Error('corpo vazio');
+  const comprimida = await sharp(original).resize({ width: 1200, withoutEnlargement: true }).webp({ quality: 75 }).toBuffer();
+  const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
+  const { error } = await supabase.storage.from('painel').upload(path, comprimida, { contentType: 'image/webp' });
   if (error) throw new Error(error.message);
   return supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
 }

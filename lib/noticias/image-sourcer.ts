@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
 
@@ -22,6 +23,8 @@ const EXTENSAO_POR_MIME: Record<string, string> = {
 // Muitas fontes (ex.: gov.br) bloqueiam hotlink com WAF/anti-bot após um tempo,
 // devolvendo HTML 401/403 no lugar da imagem (ORB no browser). Por isso a imagem
 // é baixada aqui (server-side, sem esse bloqueio) e re-hospedada no Storage.
+// Também recomprime pra WebP (largura máx. 1200px) — reduz uso do Storage
+// (Free plan só tem 1GB) já que o pipeline agora hospeda toda imagem de notícia.
 async function baixarEHospedar(url: string): Promise<string | null> {
   return safeRun(
     async () => {
@@ -32,17 +35,21 @@ async function baixarEHospedar(url: string): Promise<string | null> {
       if (!res.ok) return null;
 
       const contentType = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase() ?? '';
-      const ext = EXTENSAO_POR_MIME[contentType];
-      if (!ext) return null;
+      if (!EXTENSAO_POR_MIME[contentType]) return null;
 
-      const buffer = Buffer.from(await res.arrayBuffer());
-      if (buffer.byteLength === 0) return null;
+      const original = Buffer.from(await res.arrayBuffer());
+      if (original.byteLength === 0) return null;
 
-      const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const comprimida = await sharp(original)
+        .resize({ width: 1200, withoutEnlargement: true })
+        .webp({ quality: 75 })
+        .toBuffer();
+
+      const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
       const supabase = getServiceClient();
       const { error } = await supabase.storage
         .from('painel')
-        .upload(path, buffer, { contentType });
+        .upload(path, comprimida, { contentType: 'image/webp' });
       if (error) return null;
 
       return supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
