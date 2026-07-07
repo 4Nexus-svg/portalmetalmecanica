@@ -1,7 +1,55 @@
+import { createClient } from '@supabase/supabase-js';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
 
-const UA = 'Mozilla/5.0 (compatible; PortalMetalmecanica/1.0)';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+
+function getServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
+const EXTENSAO_POR_MIME: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+};
+
+// Muitas fontes (ex.: gov.br) bloqueiam hotlink com WAF/anti-bot após um tempo,
+// devolvendo HTML 401/403 no lugar da imagem (ORB no browser). Por isso a imagem
+// é baixada aqui (server-side, sem esse bloqueio) e re-hospedada no Storage.
+async function baixarEHospedar(url: string): Promise<string | null> {
+  return safeRun(
+    async () => {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': UA, Accept: 'image/*' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) return null;
+
+      const contentType = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase() ?? '';
+      const ext = EXTENSAO_POR_MIME[contentType];
+      if (!ext) return null;
+
+      const buffer = Buffer.from(await res.arrayBuffer());
+      if (buffer.byteLength === 0) return null;
+
+      const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const supabase = getServiceClient();
+      const { error } = await supabase.storage
+        .from('painel')
+        .upload(path, buffer, { contentType });
+      if (error) return null;
+
+      return supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
+    },
+    { fallback: null }
+  );
+}
 
 function isImagemValida(url: string): boolean {
   if (!url || !url.startsWith('http')) return false;
@@ -45,14 +93,18 @@ async function extrairOgImage(url: string): Promise<string | null> {
 
 export async function resolverImagem(item: FeedItem): Promise<string | null> {
   // 1. Imagem já retornada pela API/RSS
-  if (item.imagemUrl && isImagemValida(item.imagemUrl)) {
-    return item.imagemUrl;
-  }
+  let candidata: string | null =
+    item.imagemUrl && isImagemValida(item.imagemUrl) ? item.imagemUrl : null;
 
   // 2. Scraping og:image do artigo original
-  const scraped = await extrairOgImage(item.url);
-  if (scraped) return scraped;
+  if (!candidata) {
+    candidata = await extrairOgImage(item.url);
+  }
 
-  // 3. Sem imagem — publisher usa placeholder
-  return null;
+  if (!candidata) return null;
+
+  // 3. Baixa e re-hospeda no Storage — link hotlinkado quebra com o tempo
+  //    (WAF/anti-bot de terceiros). Se falhar, não usa a URL original: ela
+  //    tende a acabar quebrada mesmo funcionando no momento da publicação.
+  return baixarEHospedar(candidata);
 }

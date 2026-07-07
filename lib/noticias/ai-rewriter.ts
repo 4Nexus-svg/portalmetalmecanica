@@ -17,9 +17,17 @@ export async function reescreverComIA(item: FeedItem): Promise<RewriteResult> {
   const contexto = `Título: ${item.titulo}\nFonte: ${item.fonteNome}\nConteúdo: ${item.conteudo.slice(0, 800)}`;
 
   // ── Chamada 1: metadados (JSON) ───────────────────────────────────────────
-  const metadados = await safeRun(
-    async () => {
-      const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
+  // Sem fallback: se todos os provedores de IA falharem aqui, é melhor abortar
+  // a publicação (pipeline tenta de novo no próximo cron) do que publicar
+  // título cru truncado/lixo de RSS ("The post X appeared first on Y...").
+  // tentativas:1 porque generateText() já percorre Gemini→Groq→OpenRouter
+  // internamente — repetir isso 3x (default do safeRun) só triplica o consumo
+  // de cota sem chance real de sucesso diferente.
+  let metadados: { titulo: string; resumo: string; categoria: string; regiao: string };
+  try {
+    metadados = await safeRun(
+      async () => {
+        const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
 Analise a notícia abaixo e responda APENAS com JSON válido (sem markdown, sem explicações):
 {"titulo":"string (máx 90 chars, objetivo)","resumo":"string (máx 200 chars, 1 frase)","categoria":"Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia","regiao":"ES|MG|Brasil|Internacional"}
 Use Legislacao para notícias sobre NRs, normas, regulamentações, segurança do trabalho, EPI, CIPA, acidentes.
@@ -27,19 +35,15 @@ Use Legislacao para notícias sobre NRs, normas, regulamentações, segurança d
 NOTÍCIA:
 ${contexto}`;
 
-      const text = await generateText(prompt);
-      const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
-      return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
-    },
-    {
-      fallback: {
-        titulo: item.titulo.slice(0, 90),
-        resumo: item.conteudo.slice(0, 200),
-        categoria: 'Mercado',
-        regiao: 'Brasil',
+        const text = await generateText(prompt);
+        const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+        return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
       },
-    }
-  );
+      { tentativas: 1, timeout: 45000 }
+    );
+  } catch {
+    throw new Error(`IA indisponível (todos os provedores falharam) para: ${item.titulo}`);
+  }
 
   // ── Chamada 2: artigo completo (HTML direto) ──────────────────────────────
   const conteudo = await safeRun(
@@ -87,28 +91,26 @@ export async function reescreverMultiFonte(itens: FeedItem[]): Promise<RewriteRe
     )
     .join('\n\n');
 
-  const metadados = await safeRun(
-    async () => {
-      const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
+  let metadados: { titulo: string; resumo: string; categoria: string; regiao: string };
+  try {
+    metadados = await safeRun(
+      async () => {
+        const prompt = `Você é editor do Portal Metalmecânica, portal de notícias industriais do Brasil.
 As ${itens.length} fontes abaixo cobrem o MESMO evento. Crie metadados para uma matéria unificada.
 Responda APENAS com JSON válido (sem markdown):
 {"titulo":"string (máx 90 chars, mais completo que qualquer fonte individual)","resumo":"string (máx 200 chars, 1 frase que una as perspectivas)","categoria":"Mercado|Tecnologia|Industria|Emprego|Legislacao|Eventos|Siderurgia|Energia","regiao":"ES|MG|Brasil|Internacional"}
 
 ${contextoFontes}`;
 
-      const text = await generateText(prompt);
-      const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
-      return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
-    },
-    {
-      fallback: {
-        titulo: itens[0].titulo.slice(0, 90),
-        resumo: itens[0].conteudo.slice(0, 200),
-        categoria: 'Mercado',
-        regiao: 'Brasil',
+        const text = await generateText(prompt);
+        const json = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+        return JSON.parse(json) as { titulo: string; resumo: string; categoria: string; regiao: string };
       },
-    }
-  );
+      { tentativas: 1, timeout: 45000 }
+    );
+  } catch {
+    throw new Error(`IA indisponível (todos os provedores falharam) para: ${itens[0].titulo}`);
+  }
 
   const conteudo = await safeRun(
     async () => {
