@@ -1,14 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import { fetch as undiciFetch } from 'undici';
 import sharp from 'sharp';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
+// Uploads de binário usam o fetch do undici diretamente, não o global do
+// Next.js (que instrumenta/clona o fetch para cache e já foi flagrado
+// corrompendo corpo binário de upload — sinal era bytes virando caractere
+// de substituição UTF-8, clássico de round-trip texto↔binário indevido).
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { global: { fetch: undiciFetch as unknown as typeof fetch } }
   );
 }
 
