@@ -52,7 +52,22 @@ async function baixarEHospedar(url: string): Promise<string | null> {
         .upload(path, comprimida, { contentType: 'image/webp' });
       if (error) return null;
 
-      return supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
+      const publicUrl = supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
+
+      // Já vimos o upload chegar corrompido no Storage (bytes binários viraram
+      // caractere de substituição UTF-8) por algum motivo pontual do ambiente
+      // serverless — sem isso, um post ia ao ar com imagem quebrada. Rebaixa e
+      // valida antes de confiar na URL; se falhar, apaga o objeto e desiste.
+      try {
+        const conferencia = await fetch(publicUrl, { signal: AbortSignal.timeout(10000) });
+        const bytes = Buffer.from(await conferencia.arrayBuffer());
+        await sharp(bytes).metadata();
+      } catch {
+        await supabase.storage.from('painel').remove([path]);
+        return null;
+      }
+
+      return publicUrl;
     },
     { fallback: null }
   );

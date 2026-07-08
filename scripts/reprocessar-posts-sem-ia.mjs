@@ -134,7 +134,16 @@ async function baixarEHospedar(url) {
   const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
   const { error } = await supabase.storage.from('painel').upload(path, comprimida, { contentType: 'image/webp' });
   if (error) throw new Error(error.message);
-  return supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
+  const publicUrl = supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
+  const conferencia = await fetch(publicUrl, { signal: AbortSignal.timeout(10000) });
+  const bytes = Buffer.from(await conferencia.arrayBuffer());
+  try {
+    await sharp(bytes).metadata();
+  } catch {
+    await supabase.storage.from('painel').remove([path]);
+    throw new Error('upload chegou corrompido no Storage');
+  }
+  return publicUrl;
 }
 
 function pareceTextoCru(post) {
