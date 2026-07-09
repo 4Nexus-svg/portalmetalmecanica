@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetch as undiciFetch } from 'undici';
 import sharp from 'sharp';
-import { randomBytes } from 'crypto';
 
 // Rota temporária só pra validar em produção se o upload de imagem
 // (fetch do undici) para de corromper. Remover depois de confirmado.
@@ -53,25 +52,30 @@ export async function GET(req: NextRequest) {
       passos.identico = bytesVoltando.equals(comprimida);
     }
 
-    // Teste decisivo: buffer com bytes ALEATORIOS de verdade (nao repetido),
-    // mesmo tamanho, content-type generico. Se corromper igual, confirma que
-    // e um bug de encoding binario->texto (byte invalido UTF-8 vira lixo),
-    // nao algo especifico de "ser uma imagem".
-    const bufAleatorio = randomBytes(143134);
-    const pAleatorio = `noticias/debug-random-${Date.now()}.bin`;
-    const { error: errAleatorio } = await supabase.storage.from('painel').upload(pAleatorio, bufAleatorio, { contentType: 'application/octet-stream' });
-    if (errAleatorio) {
-      passos.teste_bytes_aleatorios = { upload_error: errAleatorio.message };
+    // Mesma imagem de origem, comprimida como JPEG em vez de WebP - se nao
+    // corromper, o problema e especifico do formato/conteudo WebP (provavel
+    // transformacao automatica de imagem no Cloudflare/Supabase na frente
+    // do bucket, que reconhece e reprocessa WebP mas nao bytes aleatorios).
+    const comoJpeg = await sharp(original).resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
+    const pJpeg = `noticias/debug-comojpeg-${Date.now()}.jpg`;
+    const { error: errJpeg } = await supabase.storage.from('painel').upload(pJpeg, comoJpeg, { contentType: 'image/jpeg' });
+    if (errJpeg) {
+      passos.teste_como_jpeg = { upload_error: errJpeg.message };
     } else {
-      const uAleatorio = supabase.storage.from('painel').getPublicUrl(pAleatorio).data.publicUrl;
-      const cAleatorio = await fetch(uAleatorio + '?cb=' + Date.now(), { cache: 'no-store' });
-      const bAleatorio = Buffer.from(await cAleatorio.arrayBuffer());
-      passos.teste_bytes_aleatorios = {
-        tam_enviado: bufAleatorio.length,
-        tam_recebido: bAleatorio.length,
-        identico: bAleatorio.equals(bufAleatorio),
-        razao: bAleatorio.length / bufAleatorio.length,
+      const uJpeg = supabase.storage.from('painel').getPublicUrl(pJpeg).data.publicUrl;
+      const cJpeg = await fetch(uJpeg + '?cb=' + Date.now(), { cache: 'no-store' });
+      const bJpeg = Buffer.from(await cJpeg.arrayBuffer());
+      passos.teste_como_jpeg = {
+        tam_enviado: comoJpeg.length,
+        tam_recebido: bJpeg.length,
+        identico: bJpeg.equals(comoJpeg),
       };
+      try {
+        const metaJpeg = await sharp(bJpeg).metadata();
+        passos.teste_como_jpeg_sharp = { format: metaJpeg.format, width: metaJpeg.width, height: metaJpeg.height };
+      } catch (e) {
+        passos.teste_como_jpeg_sharp_erro = e instanceof Error ? e.message : String(e);
+      }
     }
   } catch (e) {
     passos.erro_geral = e instanceof Error ? e.message : String(e);
