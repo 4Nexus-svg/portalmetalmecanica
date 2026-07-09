@@ -52,21 +52,37 @@ export async function GET(req: NextRequest) {
       passos.identico = bytesVoltando.equals(comprimida);
     }
 
-    // Busca binaria pelo tamanho onde comeca a corromper
-    const tamanhos = [1_000, 10_000, 30_000, 60_000, 90_000, 120_000, 143_000];
-    const resultadosTamanho: unknown[] = [];
-    for (const tam of tamanhos) {
-      const buf = Buffer.alloc(tam, 65); // preenchido com 'A'
-      const p = `noticias/debug-tam-${tam}-${Date.now()}.bin`;
-      const { error: errT } = await supabase.storage.from('painel').upload(p, buf, { contentType: 'application/octet-stream' });
-      if (errT) { resultadosTamanho.push({ tam, upload_error: errT.message }); continue; }
-      const u = supabase.storage.from('painel').getPublicUrl(p).data.publicUrl;
-      const c = await fetch(u + '?cb=' + Date.now(), { cache: 'no-store' });
-      const b = Buffer.from(await c.arrayBuffer());
-      resultadosTamanho.push({ tam_enviado: tam, tam_recebido: b.length, identico: b.equals(buf) });
-      await supabase.storage.from('painel').remove([p]);
+    // Isola: e o content-type 'image/webp' que causa o problema, mesmo com
+    // conteudo generico (nao-imagem de verdade)?
+    const bufFake = Buffer.alloc(143134, 66);
+    const pFake = `noticias/debug-fakewebp-${Date.now()}.webp`;
+    const { error: errFake } = await supabase.storage.from('painel').upload(pFake, bufFake, { contentType: 'image/webp' });
+    if (errFake) {
+      passos.teste_fake_webp = { upload_error: errFake.message };
+    } else {
+      const uFake = supabase.storage.from('painel').getPublicUrl(pFake).data.publicUrl;
+      const cFake = await fetch(uFake + '?cb=' + Date.now(), { cache: 'no-store' });
+      const bFake = Buffer.from(await cFake.arrayBuffer());
+      passos.teste_fake_webp = {
+        tam_enviado: bufFake.length,
+        tam_recebido: bFake.length,
+        identico: bFake.equals(bufFake),
+      };
     }
-    passos.busca_tamanho = resultadosTamanho;
+
+    // Mesmo teste mas com extensao/content-type generico (nao-webp), mesmo conteudo
+    const pFake2 = `noticias/debug-fakebin-${Date.now()}.bin`;
+    const { error: errFake2 } = await supabase.storage.from('painel').upload(pFake2, bufFake, { contentType: 'application/octet-stream' });
+    if (!errFake2) {
+      const uFake2 = supabase.storage.from('painel').getPublicUrl(pFake2).data.publicUrl;
+      const cFake2 = await fetch(uFake2 + '?cb=' + Date.now(), { cache: 'no-store' });
+      const bFake2 = Buffer.from(await cFake2.arrayBuffer());
+      passos.teste_fake_bin = {
+        tam_enviado: bufFake.length,
+        tam_recebido: bFake2.length,
+        identico: bFake2.equals(bufFake),
+      };
+    }
   } catch (e) {
     passos.erro_geral = e instanceof Error ? e.message : String(e);
   }
