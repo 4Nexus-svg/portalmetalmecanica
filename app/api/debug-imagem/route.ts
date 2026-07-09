@@ -52,35 +52,35 @@ export async function GET(req: NextRequest) {
       passos.identico = bytesVoltando.equals(comprimida);
     }
 
-    // Isola: e o content-type 'image/webp' que causa o problema, mesmo com
-    // conteudo generico (nao-imagem de verdade)?
-    const bufFake = Buffer.alloc(143134, 66);
-    const pFake = `noticias/debug-fakewebp-${Date.now()}.webp`;
-    const { error: errFake } = await supabase.storage.from('painel').upload(pFake, bufFake, { contentType: 'image/webp' });
-    if (errFake) {
-      passos.teste_fake_webp = { upload_error: errFake.message };
-    } else {
-      const uFake = supabase.storage.from('painel').getPublicUrl(pFake).data.publicUrl;
-      const cFake = await fetch(uFake + '?cb=' + Date.now(), { cache: 'no-store' });
-      const bFake = Buffer.from(await cFake.arrayBuffer());
-      passos.teste_fake_webp = {
-        tam_enviado: bufFake.length,
-        tam_recebido: bFake.length,
-        identico: bFake.equals(bufFake),
-      };
+    // O mesmo buffer real (comprimida) sobe 3x seguidas - e sempre a mesma
+    // corrupcao (bug deterministico do conteudo) ou um retry resolve?
+    const repeticoes: unknown[] = [];
+    for (let i = 0; i < 3; i++) {
+      const p = `noticias/debug-retry-${i}-${Date.now()}.webp`;
+      const { error: errR } = await supabase.storage.from('painel').upload(p, comprimida, { contentType: 'image/webp' });
+      if (errR) { repeticoes.push({ i, upload_error: errR.message }); continue; }
+      const u = supabase.storage.from('painel').getPublicUrl(p).data.publicUrl;
+      const c = await fetch(u + '?cb=' + Date.now(), { cache: 'no-store' });
+      const b = Buffer.from(await c.arrayBuffer());
+      repeticoes.push({ i, tam_recebido: b.length, identico: b.equals(comprimida) });
     }
+    passos.repeticoes_mesmo_buffer = repeticoes;
 
-    // Mesmo teste mas com extensao/content-type generico (nao-webp), mesmo conteudo
-    const pFake2 = `noticias/debug-fakebin-${Date.now()}.bin`;
-    const { error: errFake2 } = await supabase.storage.from('painel').upload(pFake2, bufFake, { contentType: 'application/octet-stream' });
-    if (!errFake2) {
-      const uFake2 = supabase.storage.from('painel').getPublicUrl(pFake2).data.publicUrl;
-      const cFake2 = await fetch(uFake2 + '?cb=' + Date.now(), { cache: 'no-store' });
-      const bFake2 = Buffer.from(await cFake2.arrayBuffer());
-      passos.teste_fake_bin = {
-        tam_enviado: bufFake.length,
-        tam_recebido: bFake2.length,
-        identico: bFake2.equals(bufFake),
+    // Sharp com toBuffer({ resolveWithObject: false }) explicito e sem
+    // encadear .resize().webp() na mesma chain - gera o buffer em 2 passos
+    // separados, pra ver se o encadeamento influencia.
+    const etapa1 = await sharp(original).resize({ width: 1200, withoutEnlargement: true }).toBuffer();
+    const comprimida2 = await sharp(etapa1).webp({ quality: 75 }).toBuffer();
+    const pDuasEtapas = `noticias/debug-duasetapas-${Date.now()}.webp`;
+    const { error: errDuas } = await supabase.storage.from('painel').upload(pDuasEtapas, comprimida2, { contentType: 'image/webp' });
+    if (!errDuas) {
+      const uDuas = supabase.storage.from('painel').getPublicUrl(pDuasEtapas).data.publicUrl;
+      const cDuas = await fetch(uDuas + '?cb=' + Date.now(), { cache: 'no-store' });
+      const bDuas = Buffer.from(await cDuas.arrayBuffer());
+      passos.teste_duas_etapas = {
+        tam_enviado: comprimida2.length,
+        tam_recebido: bDuas.length,
+        identico: bDuas.equals(comprimida2),
       };
     }
   } catch (e) {
