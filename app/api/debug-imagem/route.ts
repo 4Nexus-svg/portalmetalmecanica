@@ -46,21 +46,26 @@ export async function GET(req: NextRequest) {
       passos.public_url = publicUrl;
       passos.tamanho_enviado = comprimida.length;
 
-      const tentativas: unknown[] = [];
-      for (const delayMs of [0, 500, 1500, 3000]) {
-        if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
-        const conf = await fetch(publicUrl + '?cachebust=' + Date.now(), { signal: AbortSignal.timeout(10000), cache: 'no-store' });
-        const bytesVoltando = Buffer.from(await conf.arrayBuffer());
-        const item: Record<string, unknown> = { delayMs, bytes: bytesVoltando.length, identico: bytesVoltando.equals(comprimida) };
-        try {
-          const meta = await sharp(bytesVoltando).metadata();
-          item.sharp_ok = { format: meta.format, width: meta.width, height: meta.height };
-        } catch (e) {
-          item.sharp_erro = e instanceof Error ? e.message : String(e);
-        }
-        tentativas.push(item);
-      }
-      passos.tentativas_redownload = tentativas;
+      const conf = await fetch(publicUrl + '?cachebust=' + Date.now(), { signal: AbortSignal.timeout(10000), cache: 'no-store' });
+      const bytesVoltando = Buffer.from(await conf.arrayBuffer());
+      passos.bytes_voltando = bytesVoltando.length;
+      passos.identico = bytesVoltando.equals(comprimida);
+    }
+
+    // Teste de controle: buffer pequeno e simples, sem sharp, pra isolar se o
+    // bug e generico do upload (qualquer buffer) ou especifico de buffer de imagem.
+    const textoSimples = Buffer.from(`teste-simples-${Date.now()}-${'x'.repeat(50)}`);
+    const pathTexto = `noticias/debug-texto-${Date.now()}.txt`;
+    const { error: errTexto } = await supabase.storage.from('painel').upload(pathTexto, textoSimples, { contentType: 'text/plain' });
+    passos.controle_texto_enviado_bytes = textoSimples.length;
+    passos.controle_texto_upload_error = errTexto?.message ?? null;
+    if (!errTexto) {
+      const urlTexto = supabase.storage.from('painel').getPublicUrl(pathTexto).data.publicUrl;
+      const confTexto = await fetch(urlTexto + '?cachebust=' + Date.now(), { cache: 'no-store' });
+      const bytesTexto = Buffer.from(await confTexto.arrayBuffer());
+      passos.controle_texto_recebido_bytes = bytesTexto.length;
+      passos.controle_texto_identico = bytesTexto.equals(textoSimples);
+      passos.controle_texto_conteudo = bytesTexto.toString('utf8').slice(0, 100);
     }
   } catch (e) {
     passos.erro_geral = e instanceof Error ? e.message : String(e);
