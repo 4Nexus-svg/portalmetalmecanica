@@ -4,7 +4,15 @@ import https from 'https';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
 
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+// Alguns sites (ex.: fiemg.com.br) devolvem 403 pra requests com só
+// User-Agent — precisam de um conjunto de headers mais completo pra passar
+// pelo WAF/anti-bot.
+const HEADERS_NAVEGADOR = {
+  'User-Agent': UA,
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+  'Accept-Language': 'pt-BR,pt;q=0.9',
+};
 
 function getServiceClient() {
   return createClient(
@@ -67,7 +75,7 @@ async function baixarEHospedar(url: string): Promise<string | null> {
   return safeRun(
     async () => {
       const res = await fetch(url, {
-        headers: { 'User-Agent': UA, Accept: 'image/*' },
+        headers: { ...HEADERS_NAVEGADOR, Accept: 'image/*' },
         signal: AbortSignal.timeout(10000),
       });
       if (!res.ok) return null;
@@ -112,8 +120,17 @@ async function baixarEHospedar(url: string): Promise<string | null> {
   );
 }
 
+// Normaliza URLs relativas/protocol-relative encontradas em <img src> e afins
+// (ex.: "//site.com/img.jpg" ou "/wp-content/img.jpg") pra URL absoluta.
+function normalizarUrl(url: string, baseUrl: string): string {
+  if (url.startsWith('//')) return `https:${url}`;
+  if (url.startsWith('/')) return new URL(url, baseUrl).toString();
+  return url;
+}
+
 function isImagemValida(url: string): boolean {
-  if (!url || !url.startsWith('http')) return false;
+  if (!url) return false;
+  if (!url.startsWith('http') && !url.startsWith('//') && !url.startsWith('/')) return false;
   const lower = url.toLowerCase();
   if (lower.endsWith('.svg') || lower.endsWith('.gif')) return false;
   if (lower.includes('favicon') || lower.includes('/icon') || lower.includes('logo')) return false;
@@ -124,7 +141,7 @@ async function extrairOgImage(url: string): Promise<string | null> {
   return safeRun(
     async () => {
       const res = await fetch(url, {
-        headers: { 'User-Agent': UA },
+        headers: HEADERS_NAVEGADOR,
         signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) return null;
@@ -134,17 +151,17 @@ async function extrairOgImage(url: string): Promise<string | null> {
       const ogMatch =
         html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
         html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-      if (ogMatch && isImagemValida(ogMatch[1])) return ogMatch[1];
+      if (ogMatch && isImagemValida(ogMatch[1])) return normalizarUrl(ogMatch[1], url);
 
       // twitter:image
       const twMatch =
         html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
         html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
-      if (twMatch && isImagemValida(twMatch[1])) return twMatch[1];
+      if (twMatch && isImagemValida(twMatch[1])) return normalizarUrl(twMatch[1], url);
 
       // Primeira <img> dentro de <article> ou <main>
       const bodyMatch = html.match(/<(?:article|main)[^>]*>[\s\S]*?<img[^>]+src=["']([^"']+)["']/i);
-      if (bodyMatch && isImagemValida(bodyMatch[1])) return bodyMatch[1];
+      if (bodyMatch && isImagemValida(bodyMatch[1])) return normalizarUrl(bodyMatch[1], url);
 
       return null;
     },
