@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetch as undiciFetch } from 'undici';
 import sharp from 'sharp';
+import https from 'https';
 
 // Rota temporária só pra validar em produção se o upload de imagem
 // (fetch do undici) para de corromper. Remover depois de confirmado.
@@ -50,6 +51,51 @@ export async function GET(req: NextRequest) {
       const bytesVoltando = Buffer.from(await conf.arrayBuffer());
       passos.bytes_voltando = bytesVoltando.length;
       passos.identico = bytesVoltando.equals(comprimida);
+    }
+
+    // Teste final: upload via https.request cru (sem undici, sem supabase-js),
+    // pra isolar se o bug esta no cliente (SDK/undici) ou do lado do servidor.
+    const pathCru = `noticias/debug-cru-${Date.now()}.webp`;
+    const projectHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).host;
+    const uploadResultado = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+      const req = https.request(
+        {
+          hostname: projectHost,
+          path: `/storage/v1/object/painel/${pathCru}`,
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            'Content-Type': 'image/webp',
+            'Content-Length': comprimida.length,
+          },
+        },
+        (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => resolve({ status: res.statusCode ?? 0, body }));
+        }
+      );
+      req.on('error', reject);
+      req.write(comprimida);
+      req.end();
+    });
+    passos.upload_cru_https = uploadResultado;
+
+    if (uploadResultado.status < 300) {
+      const urlCru = `https://${projectHost}/storage/v1/object/public/painel/${pathCru}`;
+      const cCru = await new Promise<Buffer>((resolve, reject) => {
+        https.get(urlCru + '?cb=' + Date.now(), (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (c) => chunks.push(c));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        }).on('error', reject);
+      });
+      passos.teste_https_cru = {
+        tam_enviado: comprimida.length,
+        tam_recebido: cCru.length,
+        identico: cCru.equals(comprimida),
+      };
     }
 
     // Mesma imagem de origem, comprimida como JPEG em vez de WebP - se nao
