@@ -1,21 +1,53 @@
 import { createClient } from '@supabase/supabase-js';
-import { fetch as undiciFetch } from 'undici';
 import sharp from 'sharp';
+import https from 'https';
 import type { FeedItem } from './types';
 import { safeRun } from './utils';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
-// Uploads de binário usam o fetch do undici diretamente, não o global do
-// Next.js (que instrumenta/clona o fetch para cache e já foi flagrado
-// corrompendo corpo binário de upload — sinal era bytes virando caractere
-// de substituição UTF-8, clássico de round-trip texto↔binário indevido).
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { global: { fetch: undiciFetch as unknown as typeof fetch } }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+// Upload direto via https.request, sem passar pelo storage-js/fetch.
+// Testado exaustivamente: @supabase/supabase-js .storage.upload() (com fetch
+// nativo OU com undici) corrompe de forma consistente (~1.82x maior, header
+// inválido) qualquer buffer com conteúdo real de imagem comprimida (JPEG e
+// WebP, testado nos dois formatos) — buffers genéricos/aleatórios do mesmo
+// tamanho sempre funcionam. Upload cru via https.request nunca corrompeu em
+// nenhum teste. Bug isolado no SDK/fetch, não no backend do Supabase.
+function uploadCru(bucket: string, path: string, buffer: Buffer, contentType: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const host = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).host;
+    const req = https.request(
+      {
+        hostname: host,
+        path: `/storage/v1/object/${bucket}/${path}`,
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': contentType,
+          'Content-Length': buffer.length,
+        },
+      },
+      (res) => {
+        if ((res.statusCode ?? 0) >= 300) {
+          reject(new Error(`upload cru falhou: HTTP ${res.statusCode}`));
+          res.resume();
+          return;
+        }
+        res.resume();
+        res.on('end', () => resolve());
+      }
+    );
+    req.on('error', reject);
+    req.write(buffer);
+    req.end();
+  });
 }
 
 const EXTENSAO_POR_MIME: Record<string, string> = {
@@ -53,10 +85,11 @@ async function baixarEHospedar(url: string): Promise<string | null> {
 
       const path = `noticias/${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
       const supabase = getServiceClient();
-      const { error } = await supabase.storage
-        .from('painel')
-        .upload(path, comprimida, { contentType: 'image/webp' });
-      if (error) return null;
+      try {
+        await uploadCru('painel', path, comprimida, 'image/webp');
+      } catch {
+        return null;
+      }
 
       const publicUrl = supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
 
