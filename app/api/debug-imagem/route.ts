@@ -52,21 +52,21 @@ export async function GET(req: NextRequest) {
       passos.identico = bytesVoltando.equals(comprimida);
     }
 
-    // Teste de controle: buffer pequeno e simples, sem sharp, pra isolar se o
-    // bug e generico do upload (qualquer buffer) ou especifico de buffer de imagem.
-    const textoSimples = Buffer.from(`teste-simples-${Date.now()}-${'x'.repeat(50)}`);
-    const pathTexto = `noticias/debug-texto-${Date.now()}.txt`;
-    const { error: errTexto } = await supabase.storage.from('painel').upload(pathTexto, textoSimples, { contentType: 'text/plain' });
-    passos.controle_texto_enviado_bytes = textoSimples.length;
-    passos.controle_texto_upload_error = errTexto?.message ?? null;
-    if (!errTexto) {
-      const urlTexto = supabase.storage.from('painel').getPublicUrl(pathTexto).data.publicUrl;
-      const confTexto = await fetch(urlTexto + '?cachebust=' + Date.now(), { cache: 'no-store' });
-      const bytesTexto = Buffer.from(await confTexto.arrayBuffer());
-      passos.controle_texto_recebido_bytes = bytesTexto.length;
-      passos.controle_texto_identico = bytesTexto.equals(textoSimples);
-      passos.controle_texto_conteudo = bytesTexto.toString('utf8').slice(0, 100);
+    // Busca binaria pelo tamanho onde comeca a corromper
+    const tamanhos = [1_000, 10_000, 30_000, 60_000, 90_000, 120_000, 143_000];
+    const resultadosTamanho: unknown[] = [];
+    for (const tam of tamanhos) {
+      const buf = Buffer.alloc(tam, 65); // preenchido com 'A'
+      const p = `noticias/debug-tam-${tam}-${Date.now()}.bin`;
+      const { error: errT } = await supabase.storage.from('painel').upload(p, buf, { contentType: 'application/octet-stream' });
+      if (errT) { resultadosTamanho.push({ tam, upload_error: errT.message }); continue; }
+      const u = supabase.storage.from('painel').getPublicUrl(p).data.publicUrl;
+      const c = await fetch(u + '?cb=' + Date.now(), { cache: 'no-store' });
+      const b = Buffer.from(await c.arrayBuffer());
+      resultadosTamanho.push({ tam_enviado: tam, tam_recebido: b.length, identico: b.equals(buf) });
+      await supabase.storage.from('painel').remove([p]);
     }
+    passos.busca_tamanho = resultadosTamanho;
   } catch (e) {
     passos.erro_geral = e instanceof Error ? e.message : String(e);
   }
