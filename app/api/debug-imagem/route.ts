@@ -44,19 +44,23 @@ export async function GET(req: NextRequest) {
     if (!error) {
       const publicUrl = supabase.storage.from('painel').getPublicUrl(path).data.publicUrl;
       passos.public_url = publicUrl;
+      passos.tamanho_enviado = comprimida.length;
 
-      const conf = await fetch(publicUrl, { signal: AbortSignal.timeout(10000) });
-      const bytesVoltando = Buffer.from(await conf.arrayBuffer());
-      passos.redownload_bytes = bytesVoltando.length;
-      passos.bytes_identicos = bytesVoltando.equals(comprimida);
-
-      try {
-        const meta3 = await sharp(bytesVoltando).metadata();
-        passos.sharp_apos_redownload = { format: meta3.format, width: meta3.width, height: meta3.height };
-      } catch (e) {
-        passos.sharp_apos_redownload_erro = e instanceof Error ? e.message : String(e);
-        passos.primeiros_bytes_hex = bytesVoltando.slice(0, 16).toString('hex');
+      const tentativas: unknown[] = [];
+      for (const delayMs of [0, 500, 1500, 3000]) {
+        if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+        const conf = await fetch(publicUrl + '?cachebust=' + Date.now(), { signal: AbortSignal.timeout(10000), cache: 'no-store' });
+        const bytesVoltando = Buffer.from(await conf.arrayBuffer());
+        const item: Record<string, unknown> = { delayMs, bytes: bytesVoltando.length, identico: bytesVoltando.equals(comprimida) };
+        try {
+          const meta = await sharp(bytesVoltando).metadata();
+          item.sharp_ok = { format: meta.format, width: meta.width, height: meta.height };
+        } catch (e) {
+          item.sharp_erro = e instanceof Error ? e.message : String(e);
+        }
+        tentativas.push(item);
       }
+      passos.tentativas_redownload = tentativas;
     }
   } catch (e) {
     passos.erro_geral = e instanceof Error ? e.message : String(e);
