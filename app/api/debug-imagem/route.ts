@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { fetch as undiciFetch } from 'undici';
 import sharp from 'sharp';
+import { randomBytes } from 'crypto';
 
 // Rota temporária só pra validar em produção se o upload de imagem
 // (fetch do undici) para de corromper. Remover depois de confirmado.
@@ -52,35 +53,24 @@ export async function GET(req: NextRequest) {
       passos.identico = bytesVoltando.equals(comprimida);
     }
 
-    // O mesmo buffer real (comprimida) sobe 3x seguidas - e sempre a mesma
-    // corrupcao (bug deterministico do conteudo) ou um retry resolve?
-    const repeticoes: unknown[] = [];
-    for (let i = 0; i < 3; i++) {
-      const p = `noticias/debug-retry-${i}-${Date.now()}.webp`;
-      const { error: errR } = await supabase.storage.from('painel').upload(p, comprimida, { contentType: 'image/webp' });
-      if (errR) { repeticoes.push({ i, upload_error: errR.message }); continue; }
-      const u = supabase.storage.from('painel').getPublicUrl(p).data.publicUrl;
-      const c = await fetch(u + '?cb=' + Date.now(), { cache: 'no-store' });
-      const b = Buffer.from(await c.arrayBuffer());
-      repeticoes.push({ i, tam_recebido: b.length, identico: b.equals(comprimida) });
-    }
-    passos.repeticoes_mesmo_buffer = repeticoes;
-
-    // Sharp com toBuffer({ resolveWithObject: false }) explicito e sem
-    // encadear .resize().webp() na mesma chain - gera o buffer em 2 passos
-    // separados, pra ver se o encadeamento influencia.
-    const etapa1 = await sharp(original).resize({ width: 1200, withoutEnlargement: true }).toBuffer();
-    const comprimida2 = await sharp(etapa1).webp({ quality: 75 }).toBuffer();
-    const pDuasEtapas = `noticias/debug-duasetapas-${Date.now()}.webp`;
-    const { error: errDuas } = await supabase.storage.from('painel').upload(pDuasEtapas, comprimida2, { contentType: 'image/webp' });
-    if (!errDuas) {
-      const uDuas = supabase.storage.from('painel').getPublicUrl(pDuasEtapas).data.publicUrl;
-      const cDuas = await fetch(uDuas + '?cb=' + Date.now(), { cache: 'no-store' });
-      const bDuas = Buffer.from(await cDuas.arrayBuffer());
-      passos.teste_duas_etapas = {
-        tam_enviado: comprimida2.length,
-        tam_recebido: bDuas.length,
-        identico: bDuas.equals(comprimida2),
+    // Teste decisivo: buffer com bytes ALEATORIOS de verdade (nao repetido),
+    // mesmo tamanho, content-type generico. Se corromper igual, confirma que
+    // e um bug de encoding binario->texto (byte invalido UTF-8 vira lixo),
+    // nao algo especifico de "ser uma imagem".
+    const bufAleatorio = randomBytes(143134);
+    const pAleatorio = `noticias/debug-random-${Date.now()}.bin`;
+    const { error: errAleatorio } = await supabase.storage.from('painel').upload(pAleatorio, bufAleatorio, { contentType: 'application/octet-stream' });
+    if (errAleatorio) {
+      passos.teste_bytes_aleatorios = { upload_error: errAleatorio.message };
+    } else {
+      const uAleatorio = supabase.storage.from('painel').getPublicUrl(pAleatorio).data.publicUrl;
+      const cAleatorio = await fetch(uAleatorio + '?cb=' + Date.now(), { cache: 'no-store' });
+      const bAleatorio = Buffer.from(await cAleatorio.arrayBuffer());
+      passos.teste_bytes_aleatorios = {
+        tam_enviado: bufAleatorio.length,
+        tam_recebido: bAleatorio.length,
+        identico: bAleatorio.equals(bufAleatorio),
+        razao: bAleatorio.length / bufAleatorio.length,
       };
     }
   } catch (e) {
