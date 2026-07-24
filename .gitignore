@@ -26,5 +26,23 @@ next-env.d.ts
 .env*
 .vercel
 
+# Docs internas de contexto/processo, nao vao pro repo
+CLAUDE.md
+MELHORIA_CONTINUA.md
+
+# Docs com credenciais em texto puro, nunca commitar
+*.docx
+
+# Artefatos gerados pelo pipeline de postagem no Instagram (arte, foto baixada,
+# lotes de publicacao) - sao descartaveis, apagados apos confirmar publicacao;
+# nunca devem virar commit. So os scripts (.js/.html) sao codigo de verdade.
+scripts/instagram-poc/*.png
+scripts/instagram-poc/*.webp
+scripts/instagram-poc/*.jpg
+scripts/instagram-poc/*.jpeg
+scripts/instagram-poc/tmp-foto-*
+scripts/instagram-poc/batch.json
+scripts/instagram-poc/batch-resultado.json
+
 .vercel
 .env*
