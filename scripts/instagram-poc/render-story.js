@@ -20,7 +20,7 @@ const categoria = 'Mercado';
 
 let html = fs.readFileSync(path.join(ROOT, 'template-story.html'), 'utf8');
 html = html
-  .replace('{{FOTO}}', fileUrl(foto))
+  .replaceAll('{{FOTO}}', fileUrl(foto))
   .replace('{{LOGO}}', fileUrl(logo))
   .replace('{{CATEGORIA}}', esc(categoria))
   .replace('{{MANCHETE}}', esc(manchete));

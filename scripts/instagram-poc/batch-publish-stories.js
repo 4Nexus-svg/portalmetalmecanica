@@ -2,6 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { prepararFoto } = require('./classificar-outpaint');
 
 const ROOT = __dirname;
 const CHROME = 'C:\\Users\\2P CONNECT\\.agent-browser\\browsers\\chrome-151.0.7922.47\\chrome.exe';
@@ -29,7 +30,7 @@ function renderStory({ fotoPath, categoria, manchete, outPath }) {
   const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'logo-white.png');
   let html = fs.readFileSync(path.join(ROOT, 'template-story.html'), 'utf8');
   html = html
-    .replace('{{FOTO}}', fileUrl(fotoPath))
+    .replaceAll('{{FOTO}}', fileUrl(fotoPath))
     .replace('{{LOGO}}', fileUrl(logo))
     .replace('{{CATEGORIA}}', esc(categoria))
     .replace('{{MANCHETE}}', esc(manchete));
@@ -121,9 +122,13 @@ async function processarUm(post) {
   console.log('baixando foto...');
   await baixarFoto(post.featured_image, fotoPath);
 
+  console.log('classificando imagem (arte vs foto)...');
+  const { fotoPath: fotoFinal, tipo } = prepararFoto({ fotoPath, aspecto: '9:16' });
+  console.log(`tipo: ${tipo}${tipo === 'arte' ? ' -> outpaint aplicado' : ' -> mantida como está (corte simples (cover) no template)'}`);
+
   console.log('renderizando story...');
   renderStory({
-    fotoPath,
+    fotoPath: fotoFinal,
     categoria: post.category,
     manchete: post.excerpt || post.title,
     outPath: artePath,
@@ -140,6 +145,7 @@ async function processarUm(post) {
   const resultado = await pollStatus(postId);
 
   fs.unlinkSync(fotoPath);
+  if (fotoFinal !== fotoPath && fs.existsSync(fotoFinal)) fs.unlinkSync(fotoFinal);
   if (resultado.ok) {
     fs.unlinkSync(artePath);
     await apagarDoStorage(objectPath);
