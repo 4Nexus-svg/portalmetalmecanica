@@ -49,3 +49,7 @@ scripts/instagram-poc/batch-resultado.json
 
 .vercel
 .env*
+
+# Cache do Python (detector de rosto das artes do Instagram)
+__pycache__/
+*.pyc
