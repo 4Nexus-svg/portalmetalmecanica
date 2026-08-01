@@ -29,7 +29,7 @@ async function baixarFoto(url, destino) {
 }
 
 function renderArte({ fotoPath, categoria, manchete, outPath }) {
-  const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'logo-white.png');
+  const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'emblema-instagram.png');
   let html = fs.readFileSync(path.join(ROOT, 'template.html'), 'utf8');
   html = html
     .replaceAll('{{FOTO}}', fileUrl(fotoPath))

@@ -22,6 +22,9 @@ next-env.d.ts
 !public/**/*.png
 !public/**/*.jpeg
 !public/**/*.jpg
+# E os icones do App Router (favicon/icon/apple-icon sao detectados por convencao de arquivo)
+!app/icon.png
+!app/apple-icon.png
 
 .env*
 .vercel
