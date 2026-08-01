@@ -184,6 +184,9 @@ export default function Header() {
               alt="Portal Metalmecânica"
               className={`w-auto object-contain transition-all duration-300 ${scrolled ? "h-10" : "h-20"}`}
             />
+            <span className={`text-[10px] sm:text-xs font-medium tracking-[0.25em] text-[#1A2B4A]/70 uppercase whitespace-nowrap mt-1.5 transition-all duration-300 ${scrolled ? "opacity-0 h-0 overflow-hidden mt-0" : "opacity-100"}`}>
+              Notícias <span className="text-[#C9A84C] mx-0.5">|</span> Negócios <span className="text-[#C9A84C] mx-0.5">|</span> Inovação <span className="text-[#C9A84C] mx-0.5">|</span> Indústria
+            </span>
           </Link>
 
           {/* Direita: entrar + assinar */}

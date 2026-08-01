@@ -22,7 +22,7 @@ export default async function Footer() {
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="mb-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Portal Metalmecânica" className="h-14 w-auto object-contain" />
+            <img src="/logo-variants/logo-portal-branca.png" alt="Portal Metalmecânica" className="h-14 w-auto object-contain" />
           </div>
           <p className="text-blue-200 text-sm leading-relaxed mb-4">
             O portal de referência para profissionais do setor metalmecânico nos estados do ES e MG.
