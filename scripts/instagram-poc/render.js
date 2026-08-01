@@ -2,6 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { objectPosition } = require('./lib/enquadramento');
 
 const ROOT = __dirname;
 const CHROME = 'C:\\Users\\2P CONNECT\\.agent-browser\\browsers\\chrome-151.0.7922.47\\chrome.exe';
@@ -22,9 +23,13 @@ const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'emblema-ins
 const manchete = 'Ibovespa perde força mesmo com Petrobras e Vale em alta';
 const categoria = 'Mercado';
 
+const foco = objectPosition(foto);
+console.log('enquadramento:', foco.valor, JSON.stringify(foco.deteccao));
+
 let html = fs.readFileSync(path.join(ROOT, 'template.html'), 'utf8');
 html = html
   .replaceAll('{{FOTO}}', fileUrl(foto))
+  .replace('{{FOCO}}', foco.valor)
   .replace('{{LOGO}}', fileUrl(logo))
   .replace('{{CATEGORIA}}', esc(categoria))
   .replace('{{MANCHETE}}', esc(manchete));

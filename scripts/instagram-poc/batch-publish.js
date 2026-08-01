@@ -3,6 +3,7 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { prepararFoto } = require('./classificar-outpaint');
+const { objectPosition } = require('./lib/enquadramento');
 
 const ROOT = __dirname;
 const CHROME = 'C:\\Users\\2P CONNECT\\.agent-browser\\browsers\\chrome-151.0.7922.47\\chrome.exe';
@@ -30,9 +31,14 @@ async function baixarFoto(url, destino) {
 
 function renderArte({ fotoPath, categoria, manchete, outPath }) {
   const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'emblema-instagram.png');
+  // Enquadra pelo rosto quando houver; 'center' no resto (foto industrial etc).
+  const foco = objectPosition(fotoPath);
+  console.log('enquadramento:', foco.valor, foco.deteccao.ok ? `(${foco.deteccao.blobs} blob(s))` : `(${foco.deteccao.motivo})`);
+
   let html = fs.readFileSync(path.join(ROOT, 'template.html'), 'utf8');
   html = html
     .replaceAll('{{FOTO}}', fileUrl(fotoPath))
+    .replace('{{FOCO}}', foco.valor)
     .replace('{{LOGO}}', fileUrl(logo))
     .replace('{{CATEGORIA}}', esc(categoria))
     .replace('{{MANCHETE}}', esc(manchete));
