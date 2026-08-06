@@ -30,7 +30,7 @@ async function baixarFoto(url, destino) {
 }
 
 function renderArte({ fotoPath, categoria, manchete, outPath }) {
-  const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'emblema-instagram.png');
+  const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'logo-instagram.png');
   // Enquadra pelo rosto quando houver; 'center' no resto (foto industrial etc).
   const foco = objectPosition(fotoPath);
   console.log('enquadramento:', foco.valor, foco.deteccao.ok ? `(${foco.deteccao.blobs} blob(s))` : `(${foco.deteccao.motivo})`);

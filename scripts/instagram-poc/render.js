@@ -19,7 +19,7 @@ function esc(s) {
 }
 
 const foto = path.join(ROOT, 'foto.webp');
-const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'emblema-instagram.png');
+const logo = path.join(ROOT, '..', '..', 'public', 'logo-variants', 'logo-instagram.png');
 const manchete = 'Ibovespa perde força mesmo com Petrobras e Vale em alta';
 const categoria = 'Mercado';
 
