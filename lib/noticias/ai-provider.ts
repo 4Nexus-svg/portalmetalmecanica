@@ -1,8 +1,19 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Os defaults dos fallbacks ficaram apontando para modelos que a conta não
+// consegue mais usar, e como o log não mostrava o motivo isso passou meses
+// despercebido (verificado em 2026-09-02):
+//   - llama-3.3-70b-versatile: ainda existe na Groq, mas só no tier
+//     Enterprise -> 404 "does not exist or you do not have access to it"
+//   - openai/gpt-oss-120b:free: a variante gratuita foi extinta na
+//     OpenRouter -> 404 indicando o slug pago como substituto
+// Modelo gratuito é frágil por natureza (some sem aviso, foi o que houve
+// aqui). Se voltar a dar 404, conferir os :free em /api/v1/models da
+// OpenRouter e a lista da Groq, ou definir GROQ_MODEL/OPENROUTER_MODEL nas
+// env vars da Vercel — que vencem estes defaults sem precisar de deploy.
 const GEMINI_MODEL     = process.env.GEMINI_MODEL     ?? 'gemini-2.5-flash-lite';
-const GROQ_MODEL       = process.env.GROQ_MODEL       ?? 'llama-3.3-70b-versatile';
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-oss-120b:free';
+const GROQ_MODEL       = process.env.GROQ_MODEL       ?? 'openai/gpt-oss-20b';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'z-ai/glm-5.2:free';
 
 function mensagemDoErro(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
