@@ -4,8 +4,12 @@ const GEMINI_MODEL     = process.env.GEMINI_MODEL     ?? 'gemini-2.5-flash-lite'
 const GROQ_MODEL       = process.env.GROQ_MODEL       ?? 'llama-3.3-70b-versatile';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? 'openai/gpt-oss-120b:free';
 
+function mensagemDoErro(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 function deveUsarFallback(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = mensagemDoErro(err);
   return (
     msg.includes('429') ||
     msg.includes('503') ||
@@ -93,7 +97,7 @@ export async function generateText(prompt: string): Promise<string> {
     return await callGemini(prompt);
   } catch (err) {
     if (!deveUsarFallback(err)) throw err;
-    console.warn(`[ai-provider] Gemini falhou, tentando Groq...`);
+    console.warn(`[ai-provider] Gemini falhou (${mensagemDoErro(err).slice(0, 300)}), tentando Groq...`);
   }
 
   // 2. Groq (primeiro fallback)
@@ -101,9 +105,15 @@ export async function generateText(prompt: string): Promise<string> {
     return await callGroq(prompt);
   } catch (err) {
     if (!deveUsarFallback(err)) throw err;
-    console.warn(`[ai-provider] Groq falhou, tentando OpenRouter...`);
+    console.warn(`[ai-provider] Groq falhou (${mensagemDoErro(err).slice(0, 300)}), tentando OpenRouter...`);
   }
 
-  // 3. OpenRouter (segundo fallback)
-  return await callOpenRouter(prompt);
+  // 3. OpenRouter (segundo fallback) — último da cascata: o erro sobe pro
+  // chamador, mas é registrado aqui porque lá em cima ele vira só `erros++`.
+  try {
+    return await callOpenRouter(prompt);
+  } catch (err) {
+    console.warn(`[ai-provider] OpenRouter falhou (${mensagemDoErro(err).slice(0, 300)}) — cascata esgotada`);
+    throw err;
+  }
 }
