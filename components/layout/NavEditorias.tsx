@@ -61,6 +61,21 @@ const CANAIS: Canal[] = [
     submenu: [{ label: "Colunistas", href: "/colunistas" }],
   },
   {
+    label: "Eventos",
+    href: "/eventos",
+    submenu: [
+      { label: "Feiras", href: "/eventos/feiras" },
+      { label: "Congressos", href: "/eventos/congressos" },
+      { label: "Seminários", href: "/eventos/seminarios" },
+      { label: "Workshops", href: "/eventos/workshops" },
+      { label: "Treinamentos", href: "/eventos/treinamentos" },
+      { label: "Agenda Industrial ES", href: "/eventos/agenda-es" },
+      { label: "Agenda Industrial MG", href: "/eventos/agenda-mg" },
+      { label: "Calendário de Eventos", href: "/eventos/calendario" },
+    ],
+  },
+
+  {
     label: "Mídia",
     href: "/midia",
     submenu: [
