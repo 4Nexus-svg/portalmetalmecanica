@@ -108,7 +108,7 @@ export default function NavEditorias() {
     <nav aria-label="Editorias">
       {/* ── Mobile: hambúrguer + rótulo + lupa ── */}
       <div className="md:hidden bg-white border-b border-gray-100">
-        <div className="flex items-center gap-3 px-4 h-12">
+        <div className="flex items-center gap-3 px-4 h-14">
           <button
             type="button"
             onClick={() => setMenuAberto((v) => !v)}
@@ -120,7 +120,7 @@ export default function NavEditorias() {
             {menuAberto ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <span className="text-sm font-semibold uppercase tracking-widest text-[#1A2B4A]">
+          <span className="text-base font-bold uppercase tracking-widest text-[#1A2B4A]">
             Editorias
           </span>
 
@@ -146,7 +146,7 @@ export default function NavEditorias() {
                       href={canal.href}
                       onClick={fecharTudo}
                       aria-current={canalAtivo ? "page" : undefined}
-                      className={`flex-1 block rounded-lg px-3 py-2 text-sm transition-colors ${
+                      className={`flex-1 block rounded-lg px-4 py-2.5 text-base transition-colors ${
                         canalAtivo
                           ? "bg-[#C9A84C]/15 text-[#8a6d1f] font-semibold"
                           : "text-gray-600 hover:bg-[#1A2B4A] hover:text-white"
@@ -180,7 +180,7 @@ export default function NavEditorias() {
                             href={item.href}
                             onClick={fecharTudo}
                             aria-current={ativo(item.href) ? "page" : undefined}
-                            className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                            className={`block rounded-lg px-4 py-2 text-[15px] transition-colors ${
                               ativo(item.href)
                                 ? "bg-[#C9A84C]/15 text-[#8a6d1f] font-semibold"
                                 : "text-gray-500 hover:bg-[#1A2B4A] hover:text-white"
@@ -225,7 +225,7 @@ export default function NavEditorias() {
                     aria-haspopup="true"
                     aria-expanded={aberto}
                     aria-controls={idSubmenu("submenu-desktop", canal.href)}
-                    className={`flex items-center gap-1 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 whitespace-nowrap px-5 py-4 text-base font-semibold transition-colors ${
                       canalAtivo
                         ? "text-[#C9A84C] bg-[#0f1e35]"
                         : "text-gray-200 hover:text-[#C9A84C] hover:bg-[#0f1e35]"
@@ -233,7 +233,7 @@ export default function NavEditorias() {
                   >
                     {canal.label}
                     <ChevronDown
-                      size={13}
+                      size={16}
                       className={`opacity-60 transition-transform duration-200 ${aberto ? "rotate-180" : ""}`}
                     />
                   </Link>
@@ -248,7 +248,7 @@ export default function NavEditorias() {
                           key={item.href}
                           href={item.href}
                           aria-current={ativo(item.href) ? "page" : undefined}
-                          className={`block px-4 py-2.5 text-sm border-b border-gray-50 last:border-0 transition-colors ${
+                          className={`block px-5 py-3 text-[15px] border-b border-gray-50 last:border-0 transition-colors ${
                             ativo(item.href)
                               ? "bg-[#C9A84C]/15 text-[#8a6d1f] font-semibold"
                               : "text-gray-700 hover:bg-[#1A2B4A] hover:text-white"
