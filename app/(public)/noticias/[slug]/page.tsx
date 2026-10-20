@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { ArrowLeft } from "lucide-react";
 import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
 import { sanitizeContent } from "@/lib/sanitize";
+import ArticleSidebar from "@/components/layout/ArticleSidebar";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
@@ -51,7 +52,8 @@ export async function generateMetadata({ params }: Props) {
 async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>> }) {
   if (!post) return null;
   return (
-    <article className="max-w-3xl mx-auto px-4 py-10">
+    <div className="grid w-full max-w-6xl mx-auto gap-10 px-4 py-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <article className="min-w-0">
       <Link href="/noticias" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-900 transition-colors mb-8">
         <ArrowLeft size={16} /> Voltar às notícias
       </Link>
@@ -133,7 +135,11 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
           </div>
         </div>
       )}
-    </article>
+
+      </article>
+
+      <ArticleSidebar currentSlug={post.slug} />
+    </div>
   );
 }
 

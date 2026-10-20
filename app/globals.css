@@ -13,3 +13,14 @@
     @apply bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden;
   }
 }
+
+@layer utilities {
+  /* Esconde a barra de rolagem mantendo a rolagem funcional (pílulas do menu). */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
