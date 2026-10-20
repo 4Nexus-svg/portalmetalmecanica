@@ -146,7 +146,7 @@ export default function NavEditorias() {
                       href={canal.href}
                       onClick={fecharTudo}
                       aria-current={canalAtivo ? "page" : undefined}
-                      className={`flex-1 block rounded-lg px-4 py-2.5 text-base transition-colors ${
+                      className={`flex-1 block rounded-lg px-4 py-2.5 text-base font-semibold uppercase tracking-wide transition-colors ${
                         canalAtivo
                           ? "bg-[#C9A84C]/15 text-[#8a6d1f] font-semibold"
                           : "text-gray-600 hover:bg-[#1A2B4A] hover:text-white"
@@ -225,7 +225,7 @@ export default function NavEditorias() {
                     aria-haspopup="true"
                     aria-expanded={aberto}
                     aria-controls={idSubmenu("submenu-desktop", canal.href)}
-                    className={`flex items-center gap-1.5 whitespace-nowrap px-5 py-4 text-base font-semibold transition-colors ${
+                    className={`flex items-center gap-1.5 whitespace-nowrap px-4 lg:px-8 py-4 text-base lg:text-lg uppercase tracking-wide font-semibold transition-colors ${
                       canalAtivo
                         ? "text-[#C9A84C] bg-[#0f1e35]"
                         : "text-gray-200 hover:text-[#C9A84C] hover:bg-[#0f1e35]"
