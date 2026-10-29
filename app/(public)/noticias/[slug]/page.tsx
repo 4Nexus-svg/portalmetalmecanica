@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { ArrowLeft } from "lucide-react";
 import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
 import { sanitizeContent } from "@/lib/sanitize";
+import { absoluteUrl } from "@/lib/seo";
 import ArticleSidebar from "@/components/layout/ArticleSidebar";
 import type { Database } from "@/types/database";
 
@@ -32,7 +33,6 @@ export async function generateMetadata({ params }: Props) {
     return {
       title: post.title,
       description: post.excerpt,
-      openGraph: { images: post.featured_image ? [post.featured_image] : [] },
     };
   }
 
