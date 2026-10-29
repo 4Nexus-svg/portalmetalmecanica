@@ -55,7 +55,7 @@ Painel do GitHub → **Resumo diario WhatsApp** → **Run workflow** → escolha
 curl.exe -H "Authorization: Bearer $env:CRON_SECRET" "https://www.portalmetalmecanica.com.br/api/cron/whatsapp-digest?slot=manha"
 ```
 
-Resposta esperada: `{"sent":true,"edicao":"manha","mensagens":6,"titulos":[...],"janela":{...}}`. Se a janela estiver vazia: `{"sent":false, "reason":"sem notícias publicadas na janela desta edição"}`.
+Resposta esperada: `{"sent":true,"edicao":"manha","mensagens":6,"titulos":[...],"janela":{...}}`. Se a janela estiver vazia: `{"sent":false, "reason":"sem notícias novas na janela desta edição (ou todas já enviadas)"}`.
 
 Pra conferir se o cartão do WhatsApp aparece com foto: toque em "Enviar no WhatsApp" numa notícia que tenha imagem, mande pra você mesmo (mensagem privada) e veja se o link abre com foto e título.
 
@@ -76,3 +76,7 @@ Pra conferir se o cartão do WhatsApp aparece com foto: toque em "Enviar no What
 | 502 + `telegramCode: 401` | Token do bot errado/revogado | Conferir token no @BotFather |
 | 502 + `telegramCode: 403` | Bot bloqueado ou sem /start | Mandar /start pro bot de novo |
 | 502 + `telegramCode: 400` | `TELEGRAM_CHAT_ID` errado | Pegar o id de novo pela rota (sem a env) |
+
+## Anti-repetição
+
+A tabela `resumo_enviados` (migration `023_resumo_enviados.sql`) guarda o slug de cada notícia já enviada; a rota pula as que já saíram. Assim, disparo manual ou cron do GitHub atrasado não repete notícia. Rode a migration no SQL Editor do Supabase; sem ela a rota continua funcionando, mas sem deduplicar.

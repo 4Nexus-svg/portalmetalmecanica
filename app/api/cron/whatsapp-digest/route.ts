@@ -90,8 +90,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: `Supabase: ${error.message}` }, { status: 500 });
   }
 
+  const supabase = await createServiceClient();
+  const candidatas = (data ?? []) as { slug: string; title: string; published_at: string | null }[];
+
+  // Notícias que já saíram em outra execução (disparo manual, cron atrasado).
+  // Se a tabela ainda não existe (migration 023), segue sem deduplicar.
+  const { data: jaEnviadas, error: erroEnviadas } = await supabase
+    .from('resumo_enviados')
+    .select('slug')
+    .in('slug', candidatas.map((c) => c.slug));
+  if (erroEnviadas) console.error('resumo_enviados:', erroEnviadas.message);
+  const enviadas = new Set(((jaEnviadas ?? []) as { slug: string }[]).map((r) => r.slug));
+
   const selecionadas = selecionarArtigosJanela(
-    (data ?? []) as { slug: string; title: string; published_at: string | null }[],
+    candidatas.filter((c) => !enviadas.has(c.slug)),
     janela,
     edicao.maxTitulos
   );
@@ -99,7 +111,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       sent: false,
       edicao: edicao.slug,
-      reason: 'sem notícias publicadas na janela desta edição',
+      reason: 'sem notícias novas na janela desta edição (ou todas já enviadas)',
       janela: { inicio: janela.inicio.toISOString(), fim: janela.fim.toISOString() },
     });
   }
@@ -123,6 +135,11 @@ export async function GET(req: NextRequest) {
       );
     }
   }
+
+  const { error: erroMarca } = await supabase
+    .from('resumo_enviados')
+    .upsert(selecionadas.map((a) => ({ slug: a.slug, edicao: edicao.slug })) as never, { onConflict: 'slug' });
+  if (erroMarca) console.error('resumo_enviados (marcar):', erroMarca.message);
 
   return NextResponse.json({
     sent: true,
