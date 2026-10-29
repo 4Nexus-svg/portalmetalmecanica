@@ -1,0 +1,44 @@
+name: Resumo diario WhatsApp
+
+on:
+  schedule:
+    # 3 edições/dia em horário de São Paulo (UTC-3, sem DST):
+    # 11:00 UTC = 08:00 BRT (manhã), 16:00 UTC = 13:00 BRT (meio-dia),
+    # 21:00 UTC = 18:00 BRT (tarde). Cada edição manda as notícias da janela
+    # desde a anterior — ver lib/whatsapp/resumo.ts.
+    - cron: '0 11 * * *'
+    - cron: '0 16 * * *'
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Edição a enviar (vazio = deduzir pela hora)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - manha
+          - meio
+          - tarde
+
+jobs:
+  resumo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envia resumo da edicao
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          # No agendado, mapeia o cron disparado pro slot; no manual, usa o input.
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_SLOT: ${{ github.event.inputs.slot }}
+        run: |
+          case "$SCHEDULE" in
+            "0 11 * * *") SLOT=manha ;;
+            "0 16 * * *") SLOT=meio ;;
+            "0 21 * * *") SLOT=tarde ;;
+            *) SLOT="$INPUT_SLOT" ;;
+          esac
+          echo "Slot: ${SLOT:-deduz-pela-hora}"
+          curl -sf -H "Authorization: Bearer $CRON_SECRET" \
+            "$SITE_URL/api/cron/whatsapp-digest${SLOT:+?slot=$SLOT}"
