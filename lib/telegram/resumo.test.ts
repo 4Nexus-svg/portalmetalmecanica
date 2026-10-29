@@ -12,7 +12,7 @@ const noticias = [
 describe('urlNoticia', () => {
   it('monta a URL absoluta da notícia em /noticias/[slug]', () => {
     expect(urlNoticia('fiemg-lanca-curso')).toBe(
-      'https://portalmetalmecanica.vercel.app/noticias/fiemg-lanca-curso'
+      'https://www.portalmetalmecanica.com.br/noticias/fiemg-lanca-curso'
     );
   });
 });
@@ -27,11 +27,11 @@ describe('linkWhatsApp', () => {
   it('gera wa.me com título em negrito e o link (o WhatsApp monta o cartão com a foto)', () => {
     const link = linkWhatsApp(
       'Título X',
-      'https://portalmetalmecanica.vercel.app/noticias/titulo-x'
+      'https://www.portalmetalmecanica.com.br/noticias/titulo-x'
     );
     expect(link.startsWith('https://wa.me/?text=')).toBe(true);
     expect(decodeURIComponent(link.slice('https://wa.me/?text='.length))).toBe(
-      '*Título X*\n\nhttps://portalmetalmecanica.vercel.app/noticias/titulo-x'
+      '*Título X*\n\nhttps://www.portalmetalmecanica.com.br/noticias/titulo-x'
     );
   });
 });
@@ -52,14 +52,14 @@ describe('buildMensagensTelegram', () => {
     const wa = decodeURIComponent(botao.url.split('text=')[1]);
     expect(wa).toBe(
       '📰 *PORTAL METALMECÂNICA* — Notícias da manhã, 28/10/2026\n\n' +
-        '*FIEMG lança curso de solda*\nhttps://portalmetalmecanica.vercel.app/noticias/fiemg-lanca-curso\n\n' +
-        '*Acesita & Vale: <b>investimento</b> em DF*\nhttps://portalmetalmecanica.vercel.app/noticias/acesita-vale'
+        '*FIEMG lança curso de solda*\nhttps://www.portalmetalmecanica.com.br/noticias/fiemg-lanca-curso\n\n' +
+        '*Acesita & Vale: <b>investimento</b> em DF*\nhttps://www.portalmetalmecanica.com.br/noticias/acesita-vale'
     );
   });
 
   it('cada notícia tem título, link com prévia grande e botão pro WhatsApp', () => {
     const m = msgs[1];
-    const url = 'https://portalmetalmecanica.vercel.app/noticias/fiemg-lanca-curso';
+    const url = 'https://www.portalmetalmecanica.com.br/noticias/fiemg-lanca-curso';
     expect(m.text).toBe(`<b>FIEMG lança curso de solda</b>\n\n${url}`);
     expect(m.link_preview_options).toEqual({ url, prefer_large_media: true });
     expect(m.reply_markup?.inline_keyboard[0][0]).toEqual({

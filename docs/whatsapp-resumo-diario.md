@@ -13,7 +13,7 @@ As janelas se encaixam exatas ([18h→08h) [08h→13h) [13h→18h)) — **nenhum
 ```
 *Título da notícia*
 
-https://portalmetalmecanica.vercel.app/noticias/slug-da-noticia
+https://www.portalmetalmecanica.com.br/noticias/slug-da-noticia
 ```
 
 **Pra mudar horários ou quantidade por edição**: altere só `RESUMO_EDICOES` em `lib/whatsapp/resumo.ts` (horas em São Paulo e `maxTitulos`), e os crons correspondentes em `.github/workflows/digesto-whatsapp.yml` (horas em UTC = SP+3).
@@ -43,7 +43,7 @@ Agendamento **só** no GitHub Actions — o cron-job.org NÃO deve chamar essa r
 
 1. No Telegram, abra o **@BotFather** (o com selo azul ✔️ — os outros são golpe), mande `/newbot`, escolha nome e usuário terminado em `bot`. Guarde o token.
 2. Abra o seu bot e mande **/start** (bot só pode escrever pra quem falou com ele antes).
-3. No GitHub do projeto: **Settings → Secrets and variables → Actions**, crie `SITE_URL` (`https://portalmetalmecanica.vercel.app`) e `CRON_SECRET` (o mesmo do Vercel).
+3. No GitHub do projeto: **Settings → Secrets and variables → Actions**, crie `SITE_URL` (`https://www.portalmetalmecanica.com.br`) e `CRON_SECRET` (o mesmo do Vercel).
 4. No Vercel (**Settings → Environment Variables**, Production): `TELEGRAM_BOT_TOKEN`. Redeploy.
 5. Descobrir o chat_id: chame a rota (abaixo) — sem `TELEGRAM_CHAT_ID`, ela responde 503 com `chatsQueMandaramStart: [{ id, nome }]`. Cadastre o `id` como `TELEGRAM_CHAT_ID` no Vercel e faça redeploy.
 
@@ -52,7 +52,7 @@ Agendamento **só** no GitHub Actions — o cron-job.org NÃO deve chamar essa r
 Painel do GitHub → **Resumo diario WhatsApp** → **Run workflow** → escolha a edição, ou local:
 
 ```powershell
-curl.exe -H "Authorization: Bearer $env:CRON_SECRET" "https://portalmetalmecanica.vercel.app/api/cron/whatsapp-digest?slot=manha"
+curl.exe -H "Authorization: Bearer $env:CRON_SECRET" "https://www.portalmetalmecanica.com.br/api/cron/whatsapp-digest?slot=manha"
 ```
 
 Resposta esperada: `{"sent":true,"edicao":"manha","mensagens":6,"titulos":[...],"janela":{...}}`. Se a janela estiver vazia: `{"sent":false, "reason":"sem notícias publicadas na janela desta edição"}`.

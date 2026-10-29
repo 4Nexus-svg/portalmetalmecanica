@@ -33,6 +33,15 @@ export async function generateMetadata({ params }: Props) {
     return {
       title: post.title,
       description: post.excerpt,
+      openGraph: {
+        title: post.title,
+        description: post.excerpt ?? undefined,
+        url: absoluteUrl(`/noticias/${slug}`),
+        type: "article",
+        images: post.featured_image
+          ? [{ url: absoluteUrl(`/og/noticia/${slug}`), width: 1200, height: 630 }]
+          : [],
+      },
     };
   }
 
