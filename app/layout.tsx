@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { BannerSlot } from "@/components/ui/BannerSlot";
 import AuthHashHandler from "@/components/auth/AuthHashHandler";
+import AvisoManutencao from "@/components/layout/AvisoManutencao";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-50 text-gray-900 antialiased flex flex-col min-h-screen">
         <Header />
         <div className="h-[208px] md:h-[210px] shrink-0" aria-hidden="true" />
+        <AvisoManutencao />
         <div className="max-w-7xl mx-auto px-4 w-full">
           {/* Desktop: leaderboard 728x90 / 970x90 */}
           <BannerSlot position="top" className="mb-4 hidden sm:block" />
