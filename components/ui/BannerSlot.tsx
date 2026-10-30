@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { BannerRotativo } from "./BannerRotativo";
 import type { Database } from "@/types/database";
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export async function BannerSlot({ position, className }: Props) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const hoje = new Date().toISOString().split("T")[0];
 
   const { data } = await supabase

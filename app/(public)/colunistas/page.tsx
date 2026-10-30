@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 import type { Database } from "@/types/database";
 
@@ -12,7 +12,7 @@ export const metadata = {
 };
 
 export default async function ColunistasPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: colunistas } = await supabase
     .from("columnists")

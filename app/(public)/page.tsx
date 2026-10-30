@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { POST_CARD_COLUNAS } from "@/lib/posts-colunas";
 import { getSettings } from "@/lib/settings";
 import Manchete from "@/components/home/Manchete";
 import FaixaColunistas from "@/components/home/FaixaColunistas";
@@ -33,14 +34,14 @@ const ORDEM_PADRAO: Pick<Bloco, "key" | "coluna" | "ordem" | "ativo">[] = [
 ];
 
 export default async function HomePage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: posts } = await supabase
-    .from("posts").select("*").not("published_at", "is", null).neq("category", "Legislacao")
+    .from("posts").select(POST_CARD_COLUNAS).not("published_at", "is", null).neq("category", "Legislacao")
     .order("published_at", { ascending: false }).limit(20) as { data: Post[] | null; error: unknown };
 
   const { data: postsSecoes } = await supabase
-    .from("posts").select("*").not("published_at", "is", null)
+    .from("posts").select(POST_CARD_COLUNAS).not("published_at", "is", null)
     .or("region.eq.ES,region.eq.MG,category.eq.Legislacao,category.eq.Mercado")
     .order("published_at", { ascending: false }).limit(60) as { data: Post[] | null; error: unknown };
 

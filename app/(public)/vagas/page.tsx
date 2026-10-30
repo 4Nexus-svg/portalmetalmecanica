@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 import type { Database } from "@/types/database";
 
@@ -7,7 +7,7 @@ type Vaga = Database["public"]["Tables"]["jobs"]["Row"];
 export const revalidate = 300;
 
 export default async function VagasPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const hoje = new Date().toISOString().split("T")[0];
   const { data: vagas } = await supabase
     .from("jobs").select("*").eq("ativo", true)

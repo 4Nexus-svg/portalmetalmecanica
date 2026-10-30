@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -13,9 +13,15 @@ type Props = { params: Promise<{ slug: string }> };
 
 export const revalidate = 300;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function ArtigoPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: artigo } = await supabase
     .from("articles").select("*").eq("slug", slug).not("published_at", "is", null).maybeSingle() as { data: Artigo | null; error: unknown };

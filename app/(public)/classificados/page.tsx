@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,7 +9,7 @@ type Classified = Database["public"]["Tables"]["classifieds"]["Row"];
 export const revalidate = 60;
 
 export default async function ClassificadosPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: classificados } = await supabase
     .from("classifieds")

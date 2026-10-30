@@ -26,6 +26,7 @@ export async function criarPost(input: PostInput) {
   if (error) throw new Error(error.message);
   revalidatePath("/painel/noticias");
   revalidatePath("/noticias");
+  revalidatePath("/noticias/[slug]", "page");
   revalidatePath("/");
 }
 
@@ -36,6 +37,7 @@ export async function atualizarPost(id: number, input: PostInput) {
   if (error) throw new Error(error.message);
   revalidatePath("/painel/noticias");
   revalidatePath("/noticias");
+  revalidatePath("/noticias/[slug]", "page");
   revalidatePath("/");
 }
 
@@ -46,5 +48,6 @@ export async function excluirPost(id: number) {
   if (error) throw new Error(error.message);
   revalidatePath("/painel/noticias");
   revalidatePath("/noticias");
+  revalidatePath("/noticias/[slug]", "page");
   revalidatePath("/");
 }

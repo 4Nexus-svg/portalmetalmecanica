@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import type { Database } from "@/types/database";
 
@@ -8,9 +8,15 @@ type Props = { params: Promise<{ id: string }> };
 
 export const revalidate = 300;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function VagaDetalhePage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: vaga } = await supabase
     .from("jobs").select("*").eq("id", Number(id)).eq("ativo", true).maybeSingle() as { data: Vaga | null; error: unknown };
 

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 import { Calendar } from "lucide-react";
 import { CHIPS_FILTRO } from "@/lib/eventos-filtros";
@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 export default async function EventosPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const hoje = new Date().toISOString().split("T")[0];
 

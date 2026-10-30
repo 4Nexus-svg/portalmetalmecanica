@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from 'next/link';
 import type { Database } from '@/types/database';
 
@@ -39,7 +39,7 @@ function buildUrl(params: Record<string, string | undefined>) {
 
 export default async function LicitacoesPage({ searchParams }: Props) {
   const { uf, status } = await searchParams;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from('licitacoes_pncp')

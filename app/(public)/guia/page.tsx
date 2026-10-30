@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GuiaPublicoClient from "./GuiaPublicoClient";
 import type { Database } from "@/types/database";
 
@@ -7,7 +7,7 @@ type Empresa = Database["public"]["Tables"]["companies"]["Row"];
 export const revalidate = 300;
 
 export default async function GuiaPublicoPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: empresas } = await supabase
     .from("companies").select("*").eq("ativo", true).order("name", { ascending: true }) as { data: Empresa[] | null; error: unknown };
 

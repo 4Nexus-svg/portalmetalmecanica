@@ -21,6 +21,8 @@ export async function criarAd(input: AdInput) {
   const { error } = await (supabase.from("ads") as any).insert(input);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/publicidade");
+  // Banners ficam no layout raiz e na sidebar: atualiza todas as páginas cacheadas.
+  revalidatePath("/", "layout");
 }
 
 export async function atualizarAd(id: number, input: AdInput) {
@@ -29,6 +31,8 @@ export async function atualizarAd(id: number, input: AdInput) {
   const { error } = await (supabase.from("ads") as any).update(input).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/publicidade");
+  // Banners ficam no layout raiz e na sidebar: atualiza todas as páginas cacheadas.
+  revalidatePath("/", "layout");
 }
 
 export async function excluirAd(id: number) {
@@ -37,4 +41,6 @@ export async function excluirAd(id: number) {
   const { error } = await supabase.from("ads").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/painel/publicidade");
+  // Banners ficam no layout raiz e na sidebar: atualiza todas as páginas cacheadas.
+  revalidatePath("/", "layout");
 }

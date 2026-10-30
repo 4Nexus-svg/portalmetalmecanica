@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Database } from "@/types/database";
@@ -10,9 +10,15 @@ type Props = { params: Promise<{ slug: string }> };
 
 export const revalidate = 300;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export default async function ColunistaPerfilPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: colunista } = await supabase
     .from("columnists").select("*").eq("slug", slug).maybeSingle() as { data: Colunista | null; error: unknown };

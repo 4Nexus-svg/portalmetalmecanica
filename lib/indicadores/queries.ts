@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Database } from '@/types/database';
 
 type Snapshot = Database['public']['Tables']['indicadores_snapshots']['Row'];
@@ -11,7 +11,7 @@ export type IndicadorComConfig = Config & {
 
 // Todos os indicadores ativos com ultimo snapshot e sparkline (30 pontos)
 export async function getIndicadoresComDados(): Promise<IndicadorComConfig[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: rawConfigs } = (await supabase
     .from('indicadores_config')
@@ -55,7 +55,7 @@ export async function getIndicadoresComDados(): Promise<IndicadorComConfig[]> {
 
 // Historico de um indicador para a pagina de detalhe
 export async function getHistorico(slug: string, dias: number): Promise<Snapshot[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const since = new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString();
 
   const { data } = (await supabase
@@ -72,7 +72,7 @@ export async function getHistorico(slug: string, dias: number): Promise<Snapshot
 export async function getIndicadorBySlug(
   slug: string
 ): Promise<{ config: Config; latest: Snapshot | null } | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: config } = (await supabase
     .from('indicadores_config')

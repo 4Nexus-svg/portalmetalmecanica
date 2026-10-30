@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Database } from "@/types/database";
 
 type Destaque = Database["public"]["Tables"]["featured_companies"]["Row"];
 
 export async function EmpresasDestaque({ className }: { className?: string }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const hoje = new Date().toISOString().split("T")[0];
 
   const { data } = await supabase

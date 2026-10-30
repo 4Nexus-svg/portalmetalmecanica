@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -16,12 +16,18 @@ interface Props {
 
 export const revalidate = 60;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const filtro = EVENTOS_FILTROS[slug];
   if (filtro) return { title: `${filtro.label} | Portal Metalmecânica`, description: filtro.descricao };
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase.from("events").select("title, description").eq("slug", slug).maybeSingle() as { data: { title: string; description: string | null } | null; error: unknown };
   if (!data) return {};
   return { title: `${data.title} | Portal Metalmecânica`, description: data.description ?? undefined };
@@ -30,7 +36,7 @@ export async function generateMetadata({ params }: Props) {
 // ─── Página de filtro ─────────────────────────────────────────────────────────
 async function FiltroPage({ slug }: { slug: string }) {
   const filtro = EVENTOS_FILTROS[slug];
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const hoje = new Date().toISOString().split("T")[0];
 
   let query = supabase.from("events").select("*").gte("date_start", hoje).order("date_start", { ascending: true }).limit(48);
@@ -178,7 +184,7 @@ export default async function EventoSlugPage({ params }: Props) {
   if (EVENTOS_FILTROS[slug]) return <FiltroPage slug={slug} />;
 
   // 2. Busca evento individual
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: evento } = await supabase
     .from("events")
     .select("*")

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,7 +21,7 @@ interface Props {
 
 export default async function BuscaPage({ searchParams }: Props) {
   const { q } = await searchParams;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const posts: Post[] = [];
 

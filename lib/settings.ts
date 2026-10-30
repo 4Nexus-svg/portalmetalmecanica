@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export type Settings = Record<string, string>;
 
@@ -13,7 +13,7 @@ const PADROES: Settings = {
 };
 
 export async function getSettings(): Promise<Settings> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase.from("site_settings").select("key, value") as
     { data: { key: string; value: string | null }[] | null; error: unknown };
   const out: Settings = { ...PADROES };

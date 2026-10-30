@@ -8,6 +8,12 @@ import Link from 'next/link';
 
 export const revalidate = 300;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

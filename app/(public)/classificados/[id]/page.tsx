@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -14,9 +14,15 @@ interface Props {
 
 export const revalidate = 60;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("classifieds")
     .select("*")
@@ -36,7 +42,7 @@ function formatWhatsApp(numero: string): string {
 
 export default async function ClassificadoPage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data } = await supabase
     .from("classifieds")

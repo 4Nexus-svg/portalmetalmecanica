@@ -1,4 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { createServiceClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { POST_CARD_COLUNAS } from "@/lib/posts-colunas";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +12,7 @@ import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
 import { sanitizeContent } from "@/lib/sanitize";
 import { absoluteUrl } from "@/lib/seo";
 import ArticleSidebar from "@/components/layout/ArticleSidebar";
+import ConteudoExclusivo from "@/components/noticias/ConteudoExclusivo";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
@@ -19,15 +23,15 @@ interface Props {
 
 export const revalidate = 300;
 
+// Lista vazia = cada página é gerada na 1ª visita e fica em cache (ISR),
+// em vez de consultar o Supabase a cada acesso.
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
-
-  const { data: post } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle() as { data: Post | null; error: unknown };
+  const post = await buscarPost(slug);
 
   if (post) {
     return {
@@ -120,6 +124,7 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
           )}
         </>
       ) : (
+        <ConteudoExclusivo slug={post.slug}>
         <div>
           <div className="prose prose-lg max-w-none text-gray-500 line-clamp-3">
             <p>{post.excerpt}</p>
@@ -143,6 +148,7 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
             </div>
           </div>
         </div>
+        </ConteudoExclusivo>
       )}
 
       </article>
@@ -155,11 +161,11 @@ async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>>
 // ─── Página de categoria filtrada ─────────────────────────────────────────────
 
 async function CategoriaPage({ slug, filtro }: { slug: string; filtro: typeof NOTICIAS_FILTROS[string] }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const baseQuery = supabase
     .from("posts")
-    .select("*")
+    .select(POST_CARD_COLUNAS)
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
     .limit(48);
@@ -248,10 +254,15 @@ async function CategoriaPage({ slug, filtro }: { slug: string; filtro: typeof NO
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-async function buscarPost(slug: string) {
-  const supabase = await createClient();
-
-  const { data: post } = await supabase
+/**
+ * Busca a notícia uma vez por request (generateMetadata e a página usam o mesmo
+ * resultado via React cache). Usa o service client — sem cookies, pra página
+ * continuar cacheável (ISR) — porque a RLS de `posts` esconde as exclusivas do
+ * anon. O corpo de notícia exclusiva NUNCA vai no HTML cacheado: quem é
+ * assinante carrega o conteúdo pelo navegador (ConteudoExclusivo), com a sessão.
+ */
+const buscarPost = cache(async (slug: string) => {
+  const { data: post } = await (await createServiceClient())
     .from("posts")
     .select("*")
     .eq("slug", slug)
@@ -260,23 +271,9 @@ async function buscarPost(slug: string) {
 
   if (!post) return null;
 
-  let hasAccess = !post.is_exclusive;
-  if (post.is_exclusive) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .gte("current_period_end", new Date().toISOString())
-        .maybeSingle();
-      hasAccess = !!sub;
-    }
-  }
-
-  return { ...post, hasAccess };
-}
+  const hasAccess = !post.is_exclusive;
+  return { ...post, content: hasAccess ? post.content : null, hasAccess };
+});
 
 // ─── Entry point ──────────────────────────────────────────────────────────────
 

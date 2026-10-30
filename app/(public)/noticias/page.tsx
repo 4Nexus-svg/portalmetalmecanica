@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { POST_CARD_COLUNAS } from "@/lib/posts-colunas";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,11 +26,11 @@ const FILTROS = [
 ];
 
 export default async function NoticiasPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("*")
+    .select(POST_CARD_COLUNAS)
     .not("published_at", "is", null)
     .order("published_at", { ascending: false })
     .limit(48) as { data: Post[] | null; error: unknown };

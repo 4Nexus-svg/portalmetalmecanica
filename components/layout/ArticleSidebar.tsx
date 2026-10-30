@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { BannerSlot } from "@/components/ui/BannerSlot";
 import { NOTICIAS_FILTROS } from "@/lib/noticias-filtros";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { POST_CARD_COLUNAS } from "@/lib/posts-colunas";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
@@ -24,11 +25,11 @@ function Painel({ titulo, children }: { titulo: string; children: React.ReactNod
  * no Supabase; nada disso é puxado para o client.
  */
 export default async function ArticleSidebar({ currentSlug }: { currentSlug: string }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("*")
+    .select(POST_CARD_COLUNAS)
     .not("published_at", "is", null)
     .neq("slug", currentSlug)
     .order("published_at", { ascending: false })
