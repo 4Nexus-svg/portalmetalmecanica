@@ -7,10 +7,12 @@ import Footer from "@/components/layout/Footer";
 import { BannerSlot } from "@/components/ui/BannerSlot";
 import AuthHashHandler from "@/components/auth/AuthHashHandler";
 import AvisoManutencao from "@/components/layout/AvisoManutencao";
+import { absoluteUrl } from "@/lib/seo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(absoluteUrl("/")),
   title: {
     default: "Portal Metalmecânica",
     template: "%s | Portal Metalmecânica",

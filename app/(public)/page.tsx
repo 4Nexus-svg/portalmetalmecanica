@@ -12,12 +12,17 @@ import MaisLidas from "@/components/home/MaisLidas";
 import Newsletter from "@/components/home/Newsletter";
 import Assinar from "@/components/home/Assinar";
 import CanaisRegionais from "@/components/home/CanaisRegionais";
+import { absoluteUrl } from "@/lib/seo";
 import type { Database } from "@/types/database";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"];
 type Bloco = Database["public"]["Tables"]["home_blocks"]["Row"];
 
 export const revalidate = 300;
+
+export const metadata = {
+  alternates: { canonical: absoluteUrl("/") },
+};
 
 const ORDEM_PADRAO: Pick<Bloco, "key" | "coluna" | "ordem" | "ativo">[] = [
   { key: "manchete", coluna: "full", ordem: 0, ativo: true },

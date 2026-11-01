@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: Props) {
     return {
       title: post.title,
       description: post.excerpt,
+      alternates: { canonical: absoluteUrl(`/noticias/${slug}`) },
       openGraph: {
         title: post.title,
         description: post.excerpt ?? undefined,
@@ -54,6 +55,7 @@ export async function generateMetadata({ params }: Props) {
     return {
       title: `${filtro.label} | Portal Metalmecânica`,
       description: filtro.descricao,
+      alternates: { canonical: absoluteUrl(`/noticias/${slug}`) },
     };
   }
 
@@ -64,8 +66,30 @@ export async function generateMetadata({ params }: Props) {
 
 async function PostPage({ post }: { post: Awaited<ReturnType<typeof buscarPost>> }) {
   if (!post) return null;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: post.title,
+    ...(post.excerpt ? { description: post.excerpt } : {}),
+    ...(post.featured_image ? { image: [absoluteUrl(`/og/noticia/${post.slug}`)] } : {}),
+    ...(post.published_at ? { datePublished: new Date(post.published_at).toISOString() } : {}),
+    // posts não tem coluna de atualização; não inventamos dateModified.
+    author: { "@type": "Organization", name: "Portal Metalmecânica", url: absoluteUrl("/") },
+    publisher: {
+      "@type": "Organization",
+      name: "Portal Metalmecânica",
+      url: absoluteUrl("/"),
+      logo: { "@type": "ImageObject", url: absoluteUrl("/logo.png") },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(`/noticias/${post.slug}`) },
+    ...(post.is_exclusive ? { isAccessibleForFree: false } : {}),
+  };
   return (
     <div className="grid w-full max-w-6xl mx-auto gap-10 px-4 py-10 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <article className="min-w-0">
       <Link href="/noticias" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-900 transition-colors mb-8">
         <ArrowLeft size={16} /> Voltar às notícias

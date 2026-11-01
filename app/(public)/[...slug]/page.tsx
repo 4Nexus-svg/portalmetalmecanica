@@ -39,6 +39,8 @@ export async function generateMetadata({ params }: Props) {
   const nome = nomeDaSecao(slug);
   return {
     title: `${nome} — Em Breve | Portal Metalmecânica`,
+    // Placeholder "em breve" não deve entrar no índice do Google.
+    robots: { index: false, follow: true },
   };
 }
 
