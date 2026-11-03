@@ -214,9 +214,16 @@ export function urlIndicadores(): string {
   return absoluteUrl('/indicadores');
 }
 
+/** "▲ 0,42%" / "▼ 1,30%" / "= 0,00%" — seta lê melhor que +/- no texto. */
+export function variacaoComSeta(variacao: number): string {
+  const v = Math.round(variacao * 100) / 100;
+  const seta = v > 0 ? '▲' : v < 0 ? '▼' : '=';
+  return `${seta} ${numero(Math.abs(v), 2)}%`;
+}
+
 function linhaVariacao(item: ItemCard): string {
   if (item.variacao === null) return '';
-  return ` (${formatarVariacao(item.variacao)}${item.legenda ? ` ${item.legenda}` : ''})`;
+  return ` (${variacaoComSeta(item.variacao)}${item.legenda ? ` ${item.legenda}` : ''})`;
 }
 
 function dataCurta(data: Date): string {

@@ -104,13 +104,13 @@ describe('textos do card', () => {
   );
 
   it('legenda do Telegram em HTML', () => {
-    expect(legendaTelegram(card)).toContain('💵 Dólar: <b>R$ 5,50</b> (+10,00% no dia)');
+    expect(legendaTelegram(card)).toContain('💵 Dólar: <b>R$ 5,50</b> (▲ 10,00% no dia)');
     expect(legendaTelegram(card)).toContain('Atualizado em 03/11');
   });
 
   it('texto do WhatsApp com negrito e link dos indicadores', () => {
     const texto = textoWhatsApp(card);
-    expect(texto).toContain('💵 Dólar: *R$ 5,50* (+10,00% no dia)');
+    expect(texto).toContain('💵 Dólar: *R$ 5,50* (▲ 10,00% no dia)');
     expect(texto).toContain('https://www.portalmetalmecanica.com.br/indicadores');
   });
 });

@@ -24,6 +24,14 @@ describe('escaparHtml', () => {
 });
 
 describe('linkWhatsApp', () => {
+  it('troca % + & # por equivalentes que sobrevivem à dupla decodificação Telegram→WhatsApp', () => {
+    const link = linkWhatsApp('Aço sobe 12,4% e Vale & CSN +3 #industria', 'https://x.com.br/n');
+    const texto = decodeURIComponent(link.slice('https://wa.me/?text='.length));
+    expect(texto).toContain('12,4％ e Vale ＆ CSN ＋3 ＃industria');
+    // Uma segunda decodificação (a do WhatsApp) não pode quebrar nem cortar o texto.
+    expect(decodeURIComponent(texto)).toContain('Vale ＆ CSN ＋3');
+  });
+
   it('gera wa.me com título em negrito e o link (o WhatsApp monta o cartão com a foto)', () => {
     const link = linkWhatsApp(
       'Título X',
@@ -53,7 +61,7 @@ describe('buildMensagensTelegram', () => {
     expect(wa).toBe(
       '📰 *PORTAL METALMECÂNICA* — Notícias da manhã, 28/10/2026\n\n' +
         '*FIEMG lança curso de solda*\nhttps://www.portalmetalmecanica.com.br/noticias/fiemg-lanca-curso\n\n' +
-        '*Acesita & Vale: <b>investimento</b> em DF*\nhttps://www.portalmetalmecanica.com.br/noticias/acesita-vale'
+        '*Acesita ＆ Vale: <b>investimento</b> em DF*\nhttps://www.portalmetalmecanica.com.br/noticias/acesita-vale'
     );
   });
 
@@ -72,6 +80,6 @@ describe('buildMensagensTelegram', () => {
     const m = msgs[2];
     expect(m.text).toContain('<b>Acesita &amp; Vale: &lt;b&gt;investimento&lt;/b&gt; em DF</b>');
     const wa = decodeURIComponent(m.reply_markup!.inline_keyboard[0][0].url.split('text=')[1]);
-    expect(wa.startsWith('*Acesita & Vale: <b>investimento</b> em DF*')).toBe(true);
+    expect(wa.startsWith('*Acesita ＆ Vale: <b>investimento</b> em DF*')).toBe(true);
   });
 });

@@ -37,9 +37,18 @@ export function linkWhatsApp(titulo: string, url: string): string {
   return waMe(`*${titulo}*\n\n${url}`);
 }
 
+/**
+ * O Telegram decodifica a URL do botão uma vez antes de abrir o WhatsApp, que
+ * decodifica de novo: '+' vira espaço, '%' vira lixo e '&'/'#' cortam o texto.
+ * Troca por equivalentes visuais em vez de codificar duas vezes (nem todo
+ * cliente do Telegram faz essa decodificação).
+ */
+const CARACTERES_SEGUROS: Record<string, string> = { '%': '％', '+': '＋', '&': '＆', '#': '＃' };
+
 /** Link wa.me que abre o WhatsApp com o texto pronto (o dono escolhe o grupo). */
 export function waMe(texto: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  const seguro = texto.replace(/[%+&#]/g, (c) => CARACTERES_SEGUROS[c]);
+  return `https://wa.me/?text=${encodeURIComponent(seguro)}`;
 }
 
 export function buildMensagensTelegram(
