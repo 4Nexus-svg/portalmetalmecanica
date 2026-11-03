@@ -57,6 +57,11 @@ describe('variacaoDiaria', () => {
     ]);
     expect(v).toBeCloseTo(10);
   });
+  it('null quando a captura anterior tem mais de 48h (coleta parada)', () => {
+    expect(
+      variacaoDiaria([snap(5.43, '2026-11-03T12:00:00Z'), snap(5.34, '2026-10-29T09:00:00Z')])
+    ).toBeNull();
+  });
   it('null sem base de comparação', () => {
     expect(variacaoDiaria([snap(5.5, '2026-11-03T09:00:00Z')])).toBeNull();
   });

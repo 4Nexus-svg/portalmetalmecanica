@@ -131,14 +131,18 @@ export function legendaMensal(raw: Record<string, unknown> | null | undefined): 
 
 /**
  * Variação no dia quando a fonte não grava (Dólar, Euro): compara com a
- * captura mais recente feita pelo menos 20h antes da última.
+ * captura mais recente feita pelo menos 20h (e no máximo 48h) antes da última.
  */
 export function variacaoDiaria(historico: SnapshotIndicador[]): number | null {
   const [ultimo, ...anteriores] = historico;
   if (!ultimo) return null;
   if (ultimo.variation !== null) return ultimo.variation;
-  const limite = new Date(ultimo.captured_at).getTime() - 20 * 60 * 60 * 1000;
+  const t = new Date(ultimo.captured_at).getTime();
+  const limite = t - 20 * 60 * 60 * 1000;
+  // Base mais velha que 48h (ex.: coleta parada) não é "variação no dia".
+  const maisAntigo = t - 48 * 60 * 60 * 1000;
   const base = anteriores.find((s) => new Date(s.captured_at).getTime() <= limite);
+  if (base && new Date(base.captured_at).getTime() < maisAntigo) return null;
   if (!base || base.value === 0) return null;
   return ((ultimo.value - base.value) / base.value) * 100;
 }
