@@ -92,3 +92,30 @@ export async function getIndicadorBySlug(
 
   return { config, latest: latest ?? null };
 }
+
+// Ultimas capturas de cada indicador dos cards do resumo (mais recente primeiro).
+// raw_data so dos mensais (traz o periodo de referencia); o dos diarios e o
+// payload inteiro do Yahoo, pesado e desnecessario aqui.
+export async function getHistoricosCards(
+  slugs: string[],
+  slugsMensais: string[]
+): Promise<Record<string, { value: number; variation: number | null; captured_at: string; raw_data?: Record<string, unknown> | null }[]>> {
+  const supabase = createPublicClient();
+  const pares = await Promise.all(
+    slugs.map(async (slug) => {
+      const colunas = slugsMensais.includes(slug)
+        ? 'value, variation, captured_at, raw_data'
+        : 'value, variation, captured_at';
+      const { data } = (await supabase
+        .from('indicadores_snapshots')
+        .select(colunas)
+        .eq('slug', slug)
+        .order('captured_at', { ascending: false })
+        .limit(16)) as unknown as {
+        data: { value: number; variation: number | null; captured_at: string; raw_data?: Record<string, unknown> | null }[] | null;
+      };
+      return [slug, data ?? []] as const;
+    })
+  );
+  return Object.fromEntries(pares);
+}

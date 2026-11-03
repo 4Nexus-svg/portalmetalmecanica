@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["sharp"],
   outputFileTracingIncludes: {
     "/api/cron/buscar-noticias": ["./node_modules/@img/**"],
+    // Fontes e logo lidos do disco pelo card de indicadores do resumo.
+    "/og/indicadores/[grupo]": ["./assets/fonts/**", "./public/logo-variants/logo-instagram.png"],
   },
   images: {
     remotePatterns: [

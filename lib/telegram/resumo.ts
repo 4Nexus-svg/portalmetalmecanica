@@ -37,7 +37,8 @@ export function linkWhatsApp(titulo: string, url: string): string {
   return waMe(`*${titulo}*\n\n${url}`);
 }
 
-function waMe(texto: string): string {
+/** Link wa.me que abre o WhatsApp com o texto pronto (o dono escolhe o grupo). */
+export function waMe(texto: string): string {
   return `https://wa.me/?text=${encodeURIComponent(texto)}`;
 }
 

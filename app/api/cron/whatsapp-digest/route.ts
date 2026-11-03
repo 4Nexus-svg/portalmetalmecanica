@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { buildMensagensTelegram } from '@/lib/telegram/resumo';
+import { buildMensagensTelegram, waMe } from '@/lib/telegram/resumo';
+import {
+  buscarCards,
+  legendaTelegram,
+  textoWhatsApp,
+  type CardIndicadores,
+} from '@/lib/telegram/indicadores';
+import { absoluteUrl } from '@/lib/seo';
 import {
   calcularJanela,
   edicaoPorHoraSp,
@@ -107,7 +114,16 @@ export async function GET(req: NextRequest) {
     janela,
     edicao.maxTitulos
   );
-  if (selecionadas.length === 0) {
+  // Cards de indicadores de mercado (manhã e tarde) saem mesmo sem notícia nova.
+  // Falha ao ler os indicadores não pode derrubar o resumo de notícias.
+  const cards = edicao.indicadores
+    ? await buscarCards().catch((e) => {
+        console.error('indicadores:', e);
+        return [] as CardIndicadores[];
+      })
+    : [];
+
+  if (selecionadas.length === 0 && cards.length === 0) {
     return NextResponse.json({
       sent: false,
       edicao: edicao.slug,
@@ -116,7 +132,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const mensagens = buildMensagensTelegram(edicao, selecionadas, agora);
+  const mensagens = selecionadas.length > 0 ? buildMensagensTelegram(edicao, selecionadas, agora) : [];
 
   // Em sequência pra manter a ordem no chat (cabeçalho primeiro).
   for (const mensagem of mensagens) {
@@ -136,15 +152,37 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const { error: erroMarca } = await supabase
-    .from('resumo_enviados')
-    .upsert(selecionadas.map((a) => ({ slug: a.slug, edicao: edicao.slug })) as never, { onConflict: 'slug' });
-  if (erroMarca) console.error('resumo_enviados (marcar):', erroMarca.message);
+  if (selecionadas.length > 0) {
+    const { error: erroMarca } = await supabase
+      .from('resumo_enviados')
+      .upsert(selecionadas.map((a) => ({ slug: a.slug, edicao: edicao.slug })) as never, { onConflict: 'slug' });
+    if (erroMarca) console.error('resumo_enviados (marcar):', erroMarca.message);
+  }
+
+  // Um card por mensagem (foto + legenda). O Telegram baixa a imagem da URL;
+  // o ?v= evita reaproveitar a imagem de uma edição anterior do cache dele.
+  const cardsEnviados: string[] = [];
+  const cardsErros: string[] = [];
+  for (const card of cards) {
+    const data = await telegram(token, 'sendPhoto', {
+      chat_id: chatId,
+      parse_mode: 'HTML',
+      photo: absoluteUrl(`/og/indicadores/${card.grupo}?v=${agora.getTime()}`),
+      caption: legendaTelegram(card),
+      reply_markup: {
+        inline_keyboard: [[{ text: 'Enviar no WhatsApp', url: waMe(textoWhatsApp(card)) }]],
+      },
+    });
+    if (data.ok) cardsEnviados.push(card.grupo);
+    else cardsErros.push(`${card.grupo}: ${data.description ?? 'resposta inesperada'}`);
+  }
 
   return NextResponse.json({
     sent: true,
     edicao: edicao.slug,
     mensagens: mensagens.length,
+    cardsIndicadores: cardsEnviados,
+    ...(cardsErros.length ? { cardsErros } : {}),
     titulos: selecionadas.map((a) => a.title),
     janela: { inicio: janela.inicio.toISOString(), fim: janela.fim.toISOString() },
   });

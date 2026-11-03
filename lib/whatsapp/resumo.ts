@@ -27,6 +27,8 @@ export interface Edicao {
   janelaHorasAtras: number;
   /** Quantidade de notícias desta edição (do mais recente pro mais antigo). */
   maxTitulos: number;
+  /** Manda os cards de indicadores de mercado (lib/telegram/indicadores.ts). */
+  indicadores: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export const RESUMO_EDICOES: readonly Edicao[] = [
     horaEnvioSp: 8, // 11:00 UTC
     janelaHorasAtras: 14, // desde as 18:00 de ontem (cobre a noite/madrugada)
     maxTitulos: 5,
+    indicadores: true,
   },
   {
     slug: 'meio',
@@ -48,6 +51,7 @@ export const RESUMO_EDICOES: readonly Edicao[] = [
     horaEnvioSp: 13, // 16:00 UTC
     janelaHorasAtras: 5, // desde as 08:00
     maxTitulos: 5,
+    indicadores: false,
   },
   {
     slug: 'tarde',
@@ -55,6 +59,7 @@ export const RESUMO_EDICOES: readonly Edicao[] = [
     horaEnvioSp: 18, // 21:00 UTC
     janelaHorasAtras: 5, // desde as 13:00
     maxTitulos: 5,
+    indicadores: true,
   },
 ];
 
