@@ -40,6 +40,9 @@ function uploadCru(bucket: string, path: string, buffer: Buffer, contentType: st
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
           'Content-Type': contentType,
           'Content-Length': buffer.length,
+          // Nome do arquivo tem timestamp e nunca é sobrescrito: cache de 1 ano.
+          // Sem isso o Storage serve "private, no-cache" e cada visita rebaixa.
+          'Cache-Control': 'max-age=31536000',
         },
       },
       (res) => {

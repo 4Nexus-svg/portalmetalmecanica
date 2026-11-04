@@ -56,7 +56,7 @@ export default function NovoClassificadoPage() {
 
       const { error } = await supabase.storage
         .from("classifieds")
-        .upload(path, foto, { contentType: foto.type });
+        .upload(path, foto, { contentType: foto.type, cacheControl: "31536000" });
 
       if (error) {
         toast.error("Erro ao enviar foto: " + error.message);
