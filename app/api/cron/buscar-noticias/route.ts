@@ -70,6 +70,8 @@ async function executarPipeline(modo: string, dry: boolean): Promise<ResultadoPi
             resultado.duplicadas++;
             return;
           }
+          // Marca já aqui: evita corrida entre itens processados em paralelo
+          marcarVisto(item, linksSeen, titulosSeen);
 
           // Filtro IA (Gemini)
           const filtro = await filtrarRelevanciaIA(item);

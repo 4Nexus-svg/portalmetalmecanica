@@ -27,11 +27,38 @@ export async function buscarExistentes(): Promise<Existentes> {
   const titulos = new Set<string>();
 
   for (const row of (data as { fonte_url: string | null; title: string }[]) ?? []) {
-    if (row.fonte_url) urls.add(row.fonte_url);
+    if (row.fonte_url) urls.add(urlChave(row.fonte_url));
     if (row.title) titulos.add(normT(row.title));
   }
 
   return { urls, titulos };
+}
+
+// Chave canônica da URL: remove query/hash e, quando o path termina em ID numérico
+// (ex.: Tribuna Online republica o mesmo ID com slug/título diferente), usa host+ID.
+export function urlChave(url: string): string {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+    const id = u.pathname.match(/-(\d{5,})\/?$/)?.[1];
+    if (id) return `${host}#${id}`;
+    return `${host}${u.pathname.replace(/\/+$/, '')}`.toLowerCase();
+  } catch {
+    return url;
+  }
+}
+
+function tokens(t: string): Set<string> {
+  return new Set(t.split(' ').filter((w) => w.length > 3));
+}
+
+function similar(a: string, b: string): boolean {
+  const ta = tokens(a);
+  const tb = tokens(b);
+  if (ta.size < 4 || tb.size < 4) return false;
+  let inter = 0;
+  for (const w of ta) if (tb.has(w)) inter++;
+  return inter / (ta.size + tb.size - inter) >= 0.6;
 }
 
 export function ehDuplicata(
@@ -40,9 +67,12 @@ export function ehDuplicata(
   linksSeen: Set<string>,
   titulosSeen: Set<string>
 ): boolean {
-  if (existentes.urls.has(item.url) || linksSeen.has(item.url)) return true;
+  const chave = urlChave(item.url);
+  if (existentes.urls.has(chave) || linksSeen.has(chave)) return true;
   const tNorm = normT(item.titulo);
   if (existentes.titulos.has(tNorm) || titulosSeen.has(tNorm)) return true;
+  for (const t of existentes.titulos) if (similar(tNorm, t)) return true;
+  for (const t of titulosSeen) if (similar(tNorm, t)) return true;
   return false;
 }
 
@@ -95,7 +125,7 @@ export function marcarVisto(
   linksSeen: Set<string>,
   titulosSeen: Set<string>
 ): void {
-  linksSeen.add(item.url);
+  linksSeen.add(urlChave(item.url));
   titulosSeen.add(normT(item.titulo));
 }
 
