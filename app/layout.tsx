@@ -30,8 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="max-w-7xl mx-auto px-4 w-full">
           {/* Desktop: leaderboard 728x90 / 970x90 */}
           <BannerSlot position="top" className="mb-4 hidden sm:block" />
-          {/* Mobile: banner 320x100 */}
-          <BannerSlot position="top_mobile" className="mb-4 block sm:hidden" />
+          {/* Mobile: banner 320x100 (usa os banners do topo se não houver top_mobile) */}
+          <BannerSlot position="top_mobile" fallbackPosition="top" className="mb-4 block sm:hidden" />
         </div>
         <div className="flex-1">{children}</div>
         <Footer />
