@@ -59,6 +59,7 @@ export const config = {
     "/painel/:path*",
     "/api/assinatura/:path*",
     "/api/classificados/:path*",
-    "/api/noticias/:path*",
+    // /api/noticias/* fica de fora de propósito: é chamada a cada view de
+    // notícia e a rota já valida a sessão sozinha (getUser próprio).
   ],
 };
