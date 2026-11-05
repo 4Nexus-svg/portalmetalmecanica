@@ -48,6 +48,17 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse;
 }
 
+// Só roda nas rotas que realmente precisam de sessão. Antes rodava em TODA
+// requisição (inclusive páginas públicas em cache ISR e bots), chamando o
+// Supabase Auth a cada hit e estourando o Fluid Active CPU do plano Hobby.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/assinante/:path*",
+    "/classificados/novo/:path*",
+    "/admin/:path*",
+    "/painel/:path*",
+    "/api/assinatura/:path*",
+    "/api/classificados/:path*",
+    "/api/noticias/:path*",
+  ],
 };
