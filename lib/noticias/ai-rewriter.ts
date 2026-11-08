@@ -5,6 +5,34 @@ import { safeRun } from './utils';
 const CATEGORIAS_VALIDAS = ['Mercado', 'Tecnologia', 'Industria', 'Emprego', 'Legislacao', 'Eventos', 'Siderurgia', 'Energia'];
 const REGIOES_VALIDAS = ['ES', 'MG', 'Brasil', 'Internacional'];
 
+
+// ── Fidelidade à fonte ───────────────────────────────────────────────────────
+// Incidente 2026-11-07: a Fundacentro pediu retirada de matéria cujo texto
+// (gerado com "mín. 350 palavras" a partir de 1 frase de fonte) continha
+// números e fatos inventados, atribuídos à Fundacentro. Regras abaixo existem
+// para impedir isso: a IA só pode usar o que está na fonte.
+const REGRAS_FIDELIDADE = `REGRAS DE FIDELIDADE (obrigatórias, acima de qualquer meta de tamanho):
+- Use SOMENTE fatos, nomes, cargos, datas, números, percentuais e citações que estejam EXPLICITAMENTE no texto da fonte.
+- É PROIBIDO inventar ou estimar dados, estatísticas, valores, declarações, aspas, nomes de pessoas/empresas ou detalhes de eventos.
+- Se a fonte tiver pouca informação, escreva uma matéria CURTA (2 a 3 parágrafos). Não complete com suposições, "contexto geral do setor" nem números externos.
+- Não atribua à fonte nada que ela não disse.`;
+
+function numerosDe(t: string): Set<string> {
+  const texto = t.replace(/<[^>]+>/g, ' ');
+  const out = new Set<string>();
+  for (const m of texto.matchAll(/\d[\d.,]*/g)) {
+    const n = m[0].replace(/[.,]+$/, '').replace(/[.,]/g, '');
+    if (n) out.add(n);
+  }
+  return out;
+}
+
+// Retorna os números do texto gerado que NÃO aparecem na fonte (indício de invenção).
+export function numerosNaoSuportados(gerado: string, fonte: string): string[] {
+  const base = numerosDe(fonte);
+  return [...numerosDe(gerado)].filter((n) => !base.has(n));
+}
+
 type RewriteResult = {
   titulo: string;
   resumo: string;
@@ -14,7 +42,7 @@ type RewriteResult = {
 };
 
 export async function reescreverComIA(item: FeedItem): Promise<RewriteResult> {
-  const contexto = `Título: ${item.titulo}\nFonte: ${item.fonteNome}\nConteúdo: ${item.conteudo.slice(0, 800)}`;
+  const contexto = `Título: ${item.titulo}\nFonte: ${item.fonteNome}\nConteúdo: ${item.conteudo.slice(0, 4000)}`;
 
   // ── Chamada 1: metadados (JSON) ───────────────────────────────────────────
   // Sem fallback: se todos os provedores de IA falharem aqui, é melhor abortar
@@ -56,13 +84,13 @@ ${contexto}`;
       async () => {
         const prompt = `Você é um jornalista sênior do Portal Metalmecânica, especializado no setor industrial brasileiro (metalmecânica, siderurgia, automação, energia, mineração, petróleo).
 
-Escreva uma matéria jornalística COMPLETA sobre a notícia abaixo. Use linguagem profissional e objetiva.
+Escreva uma matéria jornalística sobre a notícia abaixo, com linguagem profissional e objetiva.
+
+${REGRAS_FIDELIDADE}
 
 INSTRUÇÕES:
-- Escreva entre 5 e 7 parágrafos usando APENAS tags <p>
-- Contextualize o fato para profissionais do setor
-- Mencione impactos econômicos, dados relevantes e perspectivas do mercado
-- Mínimo absoluto: 350 palavras
+- Tamanho proporcional à fonte: no máximo 3x o tamanho do texto original; entre 2 e 6 parágrafos usando APENAS tags <p>
+- Pode contextualizar de forma genérica e qualitativa, SEM números, datas ou fatos que não estejam na fonte
 - NÃO use outros elementos HTML além de <p>
 - Responda APENAS com o HTML dos parágrafos, sem explicações, sem título
 
@@ -71,12 +99,14 @@ ${contexto}`;
 
         const html = await generateText(prompt);
         const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+        const invent = numerosNaoSuportados(clean, `${item.titulo} ${item.conteudo}`);
+        if (invent.length) throw new Error(`Números ausentes da fonte: ${invent.join(', ')}`);
         return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
       },
       { timeout: 60000, tentativas: 2, delayBase: 5000 }
     );
   } catch {
-    throw new Error(`IA indisponível (artigo completo) para: ${item.titulo}`);
+    throw new Error(`IA indisponível ou texto não fiel à fonte (artigo completo) para: ${item.titulo}`);
   }
 
   return {
@@ -92,7 +122,7 @@ export async function reescreverMultiFonte(itens: FeedItem[]): Promise<RewriteRe
   const fontesList = itens.map((i) => i.fonteNome).join(', ');
   const contextoFontes = itens
     .map((i, idx) =>
-      `--- Fonte ${idx + 1}: ${i.fonteNome} ---\nTítulo: ${i.titulo}\nConteúdo: ${i.conteudo.slice(0, 600)}`
+      `--- Fonte ${idx + 1}: ${i.fonteNome} ---\nTítulo: ${i.titulo}\nConteúdo: ${i.conteudo.slice(0, 2500)}`
     )
     .join('\n\n');
 
@@ -125,8 +155,10 @@ ${contextoFontes}`;
 
 As ${itens.length} fontes abaixo cobrem o MESMO evento de perspectivas complementares: ${fontesList}.
 
+${REGRAS_FIDELIDADE}
+
 Escreva uma matéria jornalística ORIGINAL unindo as informações das fontes. REGRAS:
-- Entre 200 e 400 palavras no total
+- Até 400 palavras (menos se as fontes forem curtas)
 - Use APENAS tags <p>
 - NÃO copie trechos das fontes — reescreva completamente com suas palavras
 - Contextualize o fato para profissionais do setor metalmecânico
@@ -137,12 +169,15 @@ ${contextoFontes}`;
 
         const html = await generateText(prompt);
         const clean = html.replace(/^```html?\s*/i, '').replace(/\s*```$/i, '').trim();
+        const base = itens.map((i) => `${i.titulo} ${i.conteudo}`).join(' ');
+        const invent = numerosNaoSuportados(clean.replace(/Fontes:[^<]*/i, ''), base);
+        if (invent.length) throw new Error(`Números ausentes das fontes: ${invent.join(', ')}`);
         return clean.startsWith('<p>') ? clean : `<p>${clean}</p>`;
       },
       { timeout: 60000, tentativas: 2, delayBase: 5000 }
     );
   } catch {
-    throw new Error(`IA indisponível (artigo completo) para: ${itens[0].titulo}`);
+    throw new Error(`IA indisponível ou texto não fiel às fontes (artigo completo) para: ${itens[0].titulo}`);
   }
 
   return {

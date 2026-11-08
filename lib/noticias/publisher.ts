@@ -48,6 +48,14 @@ export function urlChave(url: string): string {
   }
 }
 
+// URLs retiradas do ar a pedido da fonte — nunca reimportar (chave = urlChave).
+const URLS_BLOQUEADAS = new Set<string>([
+  // Fundacentro (SCI) pediu retirada em 2026-11-07: texto reescrito alterou informações.
+  urlChave(
+    'https://www.gov.br/fundacentro/pt-br/comunicacao/noticias/noticias/2026/novembro/tecnologista-da-fundacentro-recebe-comenda-da-animaseg-por-contribuicoes-a-seguranca-e-saude-no-trabalho'
+  ),
+]);
+
 function tokens(t: string): Set<string> {
   return new Set(t.split(' ').filter((w) => w.length > 3));
 }
@@ -68,6 +76,7 @@ export function ehDuplicata(
   titulosSeen: Set<string>
 ): boolean {
   const chave = urlChave(item.url);
+  if (URLS_BLOQUEADAS.has(chave)) return true;
   if (existentes.urls.has(chave) || linksSeen.has(chave)) return true;
   const tNorm = normT(item.titulo);
   if (existentes.titulos.has(tNorm) || titulosSeen.has(tNorm)) return true;
